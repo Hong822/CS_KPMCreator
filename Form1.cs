@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Windows.Forms;
 using Excel = Microsoft.Office.Interop.Excel;
+using System.IO;
 
 namespace CS_KPMCreator
 {
@@ -23,8 +24,13 @@ namespace CS_KPMCreator
 
             //if (ExcelOpenDialog.ShowDialog() == DialogResult.OK)
             {
-                tExcelPath.Text = ExcelOpenDialog.FileName;
-                tExcelPath.Text = "D:\\25_C_Projects\\CS_KPMCreator\\KPM_Ticket_Creator_V1.xlsm";
+                var Dir = Directory.GetCurrentDirectory();
+                Dir = Dir.Substring(0, Dir.LastIndexOf("\\"));
+                Dir = Dir.Substring(0, Dir.LastIndexOf("\\"));
+
+                //tExcelPath.Text = ExcelOpenDialog.FileName;
+                tExcelPath.Text = Dir + "\\KPM_Ticket_Creator_V1.xlsm";
+                
                 // Date read from Excel Files
                 ReadExcelValue();
 

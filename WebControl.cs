@@ -15,7 +15,7 @@ namespace CS_KPMCreator
             // Log In
 
             // Action one by one
-            Action(Data, action);
+            //Action(Data, action);
         }
 
         public void CreateTickets(List<Dictionary<string, string>> TicketItemList)
