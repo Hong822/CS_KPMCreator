@@ -39,12 +39,12 @@ namespace CS_KPMCreator
             this.textBox3 = new System.Windows.Forms.TextBox();
             this.tB2BPW = new System.Windows.Forms.TextBox();
             this.tB2BID = new System.Windows.Forms.TextBox();
-            this.radioButton2 = new System.Windows.Forms.RadioButton();
-            this.button1 = new System.Windows.Forms.Button();
+            this.rbB2C = new System.Windows.Forms.RadioButton();
+            this.bStartCreation = new System.Windows.Forms.Button();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
-            this.rbIE = new System.Windows.Forms.RadioButton();
-            this.rbFirefox = new System.Windows.Forms.RadioButton();
             this.rbChrome = new System.Windows.Forms.RadioButton();
+            this.rbFirefox = new System.Windows.Forms.RadioButton();
+            this.rbIE = new System.Windows.Forms.RadioButton();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.SuspendLayout();
@@ -87,7 +87,7 @@ namespace CS_KPMCreator
             this.groupBox1.Controls.Add(this.textBox3);
             this.groupBox1.Controls.Add(this.tB2BPW);
             this.groupBox1.Controls.Add(this.tB2BID);
-            this.groupBox1.Controls.Add(this.radioButton2);
+            this.groupBox1.Controls.Add(this.rbB2C);
             this.groupBox1.Controls.Add(this.rbB2B);
             this.groupBox1.Location = new System.Drawing.Point(41, 130);
             this.groupBox1.Name = "groupBox1";
@@ -131,26 +131,27 @@ namespace CS_KPMCreator
             this.tB2BID.TabIndex = 4;
             this.tB2BID.Text = "dvkomiy";
             // 
-            // radioButton2
+            // rbB2C
             // 
-            this.radioButton2.AutoSize = true;
-            this.radioButton2.Checked = true;
-            this.radioButton2.Location = new System.Drawing.Point(17, 66);
-            this.radioButton2.Name = "radioButton2";
-            this.radioButton2.Size = new System.Drawing.Size(46, 16);
-            this.radioButton2.TabIndex = 3;
-            this.radioButton2.TabStop = true;
-            this.radioButton2.Text = "B2C";
-            this.radioButton2.UseVisualStyleBackColor = true;
+            this.rbB2C.AutoSize = true;
+            this.rbB2C.Checked = true;
+            this.rbB2C.Location = new System.Drawing.Point(17, 66);
+            this.rbB2C.Name = "rbB2C";
+            this.rbB2C.Size = new System.Drawing.Size(46, 16);
+            this.rbB2C.TabIndex = 3;
+            this.rbB2C.TabStop = true;
+            this.rbB2C.Text = "B2C";
+            this.rbB2C.UseVisualStyleBackColor = true;
             // 
-            // button1
+            // bStartCreation
             // 
-            this.button1.Location = new System.Drawing.Point(40, 382);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(479, 56);
-            this.button1.TabIndex = 4;
-            this.button1.Text = "Start Creation";
-            this.button1.UseVisualStyleBackColor = true;
+            this.bStartCreation.Location = new System.Drawing.Point(40, 382);
+            this.bStartCreation.Name = "bStartCreation";
+            this.bStartCreation.Size = new System.Drawing.Size(479, 56);
+            this.bStartCreation.TabIndex = 4;
+            this.bStartCreation.Text = "Start Creation";
+            this.bStartCreation.UseVisualStyleBackColor = true;
+            this.bStartCreation.Click += new System.EventHandler(this.bStartCreation_Click);
             // 
             // groupBox2
             // 
@@ -164,6 +165,26 @@ namespace CS_KPMCreator
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Web Browser Type";
             // 
+            // rbChrome
+            // 
+            this.rbChrome.AutoSize = true;
+            this.rbChrome.Location = new System.Drawing.Point(293, 33);
+            this.rbChrome.Name = "rbChrome";
+            this.rbChrome.Size = new System.Drawing.Size(161, 16);
+            this.rbChrome.TabIndex = 2;
+            this.rbChrome.Text = "Chrome (Not supported)";
+            this.rbChrome.UseVisualStyleBackColor = true;
+            // 
+            // rbFirefox
+            // 
+            this.rbFirefox.AutoSize = true;
+            this.rbFirefox.Location = new System.Drawing.Point(176, 33);
+            this.rbFirefox.Name = "rbFirefox";
+            this.rbFirefox.Size = new System.Drawing.Size(61, 16);
+            this.rbFirefox.TabIndex = 1;
+            this.rbFirefox.Text = "Firefox";
+            this.rbFirefox.UseVisualStyleBackColor = true;
+            // 
             // rbIE
             // 
             this.rbIE.AutoSize = true;
@@ -176,33 +197,13 @@ namespace CS_KPMCreator
             this.rbIE.Text = "Internet Explorer";
             this.rbIE.UseVisualStyleBackColor = true;
             // 
-            // rbFirefox
-            // 
-            this.rbFirefox.AutoSize = true;
-            this.rbFirefox.Location = new System.Drawing.Point(176, 33);
-            this.rbFirefox.Name = "rbFirefox";
-            this.rbFirefox.Size = new System.Drawing.Size(61, 16);
-            this.rbFirefox.TabIndex = 1;
-            this.rbFirefox.Text = "Firefox";
-            this.rbFirefox.UseVisualStyleBackColor = true;
-            // 
-            // rbChrome
-            // 
-            this.rbChrome.AutoSize = true;
-            this.rbChrome.Location = new System.Drawing.Point(293, 33);
-            this.rbChrome.Name = "rbChrome";
-            this.rbChrome.Size = new System.Drawing.Size(161, 16);
-            this.rbChrome.TabIndex = 2;
-            this.rbChrome.Text = "Chrome (Not supported)";
-            this.rbChrome.UseVisualStyleBackColor = true;
-            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(555, 450);
             this.Controls.Add(this.groupBox2);
-            this.Controls.Add(this.button1);
+            this.Controls.Add(this.bStartCreation);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.tExcelPath);
             this.Controls.Add(this.bExcelSelect);
@@ -227,8 +228,8 @@ namespace CS_KPMCreator
         private System.Windows.Forms.TextBox textBox3;
         private System.Windows.Forms.TextBox tB2BPW;
         private System.Windows.Forms.TextBox tB2BID;
-        private System.Windows.Forms.RadioButton radioButton2;
-        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.RadioButton rbB2C;
+        private System.Windows.Forms.Button bStartCreation;
         private System.Windows.Forms.GroupBox groupBox2;
         private System.Windows.Forms.RadioButton rbChrome;
         private System.Windows.Forms.RadioButton rbFirefox;

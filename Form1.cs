@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Windows.Forms;
 using Excel = Microsoft.Office.Interop.Excel;
 using System.IO;
+using OpenQA.Selenium;
+using OpenQA.Selenium.IE;
+using OpenQA.Selenium.Support.UI;
 
 namespace CS_KPMCreator
 {
@@ -10,10 +13,20 @@ namespace CS_KPMCreator
     {
         private ExcelControl g_ExcelTool = new ExcelControl();
         private WebControl g_WebControl = new WebControl();
+        private List<Dictionary<string, string>> g_TicketItemList = new List<Dictionary<string, string>>();
+
+        protected InternetExplorerDriverService _driverSerivce = null;
+        protected InternetExplorerOptions _options = null;
+        protected InternetExplorerDriver _driver = null;
 
         public Form1()
         {
             InitializeComponent();
+
+            _driverSerivce = InternetExplorerDriverService.CreateDefaultService();
+            _driverSerivce.HideCommandPromptWindow = true;
+
+            _options = new InternetExplorerOptions();
         }
 
         private void bExcelSelect_Click(object sender, EventArgs e)
@@ -33,9 +46,6 @@ namespace CS_KPMCreator
                 
                 // Date read from Excel Files
                 ReadExcelValue();
-
-                // Start Creation
-                StartTicketCreation();
             }
         }
 
@@ -48,17 +58,46 @@ namespace CS_KPMCreator
             ap.Visible = true;
 
             // Fill in ticketItemList with ticket items
-            List<Dictionary<string, string>> TicketItemList = new List<Dictionary<string, string>>();
-            g_ExcelTool.FillDictionary(TicketItemList, ws_KPMCreate);
+            
+            g_ExcelTool.FillDictionary(g_TicketItemList, ws_KPMCreate);
 
-            // Start Ticket Creation 
-            g_WebControl.CreateTickets(TicketItemList);
+            
         }
 
-        private void StartTicketCreation()
+        private void bStartCreation_Click(object sender, EventArgs e)
         {
-        }
+            // Open Browser
+            _driver = new InternetExplorerDriver(_driverSerivce, _options);
 
-        
+            rbB2B.Checked = true;
+            rbB2C.Checked = false;
+
+            if (rbB2C.Checked == true)
+            {
+
+            }
+            else
+            {
+                if (rbB2B.Checked == true)
+                {
+                    string sID = tB2BID.Text;
+                    string sPW = tB2BPW.Text;
+
+                    if (sID != null && sPW != null)
+                    {
+                        _driver.Navigate().GoToUrl("https://sso.volkswagen.de/kpmweb/Index.action");
+                        _driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(10);
+                    }
+                    else
+                    {
+                        _driver.Navigate().GoToUrl("https://" + sID + ":" + sPW + "@sso.volkswagen.de/kpmweb/Index.action");
+                        _driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(10);
+                    }                    
+                }
+            }
+            
+            // Start Ticket Creation 
+            g_WebControl.CreateTickets(g_TicketItemList);
+        }
     }
 }
