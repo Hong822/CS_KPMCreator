@@ -168,32 +168,33 @@ namespace CS_KPMCreator
             // rbChrome
             // 
             this.rbChrome.AutoSize = true;
-            this.rbChrome.Location = new System.Drawing.Point(293, 33);
+            this.rbChrome.Location = new System.Drawing.Point(306, 33);
             this.rbChrome.Name = "rbChrome";
             this.rbChrome.Size = new System.Drawing.Size(161, 16);
             this.rbChrome.TabIndex = 2;
             this.rbChrome.Text = "Chrome (Not supported)";
             this.rbChrome.UseVisualStyleBackColor = true;
+            this.rbChrome.CheckedChanged += new System.EventHandler(this.rbChrome_CheckedChanged);
             // 
             // rbFirefox
             // 
             this.rbFirefox.AutoSize = true;
-            this.rbFirefox.Location = new System.Drawing.Point(176, 33);
+            this.rbFirefox.Checked = true;
+            this.rbFirefox.Location = new System.Drawing.Point(18, 33);
             this.rbFirefox.Name = "rbFirefox";
-            this.rbFirefox.Size = new System.Drawing.Size(61, 16);
+            this.rbFirefox.Size = new System.Drawing.Size(161, 16);
             this.rbFirefox.TabIndex = 1;
-            this.rbFirefox.Text = "Firefox";
+            this.rbFirefox.TabStop = true;
+            this.rbFirefox.Text = "Firefox (Recommended)";
             this.rbFirefox.UseVisualStyleBackColor = true;
             // 
             // rbIE
             // 
             this.rbIE.AutoSize = true;
-            this.rbIE.Checked = true;
-            this.rbIE.Location = new System.Drawing.Point(18, 33);
+            this.rbIE.Location = new System.Drawing.Point(185, 33);
             this.rbIE.Name = "rbIE";
             this.rbIE.Size = new System.Drawing.Size(115, 16);
             this.rbIE.TabIndex = 0;
-            this.rbIE.TabStop = true;
             this.rbIE.Text = "Internet Explorer";
             this.rbIE.UseVisualStyleBackColor = true;
             // 

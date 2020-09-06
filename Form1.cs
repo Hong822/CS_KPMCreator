@@ -66,7 +66,8 @@ namespace CS_KPMCreator
             {
                 _driverSerivce = FirefoxDriverService.CreateDefaultService(); ;
                 _driverSerivce.HideCommandPromptWindow = true;
-                _options = new FirefoxOptions();                
+                _options = new FirefoxOptions();
+                ((FirefoxOptions)_options).AddArgument("no-sandbox");
                 _driver = new FirefoxDriver((FirefoxDriverService)_driverSerivce, (FirefoxOptions)_options);
                 g_sWebtype = "Firefox";
             }
@@ -74,9 +75,10 @@ namespace CS_KPMCreator
             {
                 if (rbChrome.Checked == true)
                 {
-                    //_options = new ChromeOptions();
-                    //_driver = new ChromeDriver("C:\\KPM_Creator\\Driver\\chromedriver.exe", (ChromeOptions)_options);
-                    _driver = new ChromeDriver("C:\\KPM_Creator\\Driver\\chromedriver.exe");
+                    _driverSerivce = ChromeDriverService.CreateDefaultService();
+                    _driverSerivce.HideCommandPromptWindow = true;
+                    _options = new ChromeOptions();
+                    _driver = new ChromeDriver((ChromeDriverService)_driverSerivce, (ChromeOptions)_options);
                     g_sWebtype = "Chrome";
                 }
                 else // Default = IE
@@ -109,26 +111,19 @@ namespace CS_KPMCreator
 
                     if (sID != null && sPW != null)
                     {
-                        //string URL = "https://" + sID + ":" + sPW + "@sso.volkswagen.de/kpmweb/Index.action";
-                        string URL = "https://www.naver.com";
-                        var wait = new WebDriverWait(_driver, new TimeSpan(0, 0, 30));
-
-                        try
-                        {
-                            _driver.Navigate().GoToUrl(URL);
-                        }
-                        catch (WebDriverException e)
-                        {
-                            Console.WriteLine(e);
-                        }
-                        
+                        string URL = "https://" + sID + ":" + sPW + "@sso.volkswagen.de/kpmweb/Index.action";
+                        URL = "https://www.naver.com";
+                        URL = "https://quasi.vw.vwg/kpm/kpmweb";
+                        //URL = "https://www.google.com";
+                        //var wait = new WebDriverWait(_driver, new TimeSpan(0, 0, 1));
+                        _driver.Navigate().GoToUrl(URL);
                         MessageBox.Show("Wait!!! Login and Go to Main page. And then press OK", "Please Login KPM");
                         int awer = 1;
                     }
                     else
                     {
                         _driver.Navigate().GoToUrl("https://" + sID + ":" + sPW + "@sso.volkswagen.de/kpmweb/Index.action");
-                        _driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(10);
+                        _driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(5);
                     }
                 }
             }
@@ -141,6 +136,11 @@ namespace CS_KPMCreator
             GoToTheSite();  // Go to KPM site
                         
             g_WebControl.CreateTickets(g_TicketItemList);   // Start Ticket Creation
+        }
+
+        private void rbChrome_CheckedChanged(object sender, EventArgs e)
+        {
+
         }
     }
 }
