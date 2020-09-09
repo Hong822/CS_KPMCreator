@@ -108,7 +108,7 @@ namespace CS_KPMCreator
             //Action(Data, action);
         }
 
-        public void CreateTickets(List<Dictionary<string, string>> TicketItemList)
+        public void CreateTickets(List<Dictionary<string, string>> TicketItemList, List<Dictionary<string, string>> LActionList)
         {
             g_richTB_Status.Text = "I'm creating KPM Ticket...";
 

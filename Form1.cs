@@ -46,7 +46,7 @@ namespace CS_KPMCreator
                         
             g_WebControl.GoToTheSite(rbB2B, rbB2C, tB2BID, tB2BPW);  // Go to KPM site
                         
-            g_WebControl.CreateTickets(LTicketItemList);   // Start Ticket Creation
+            g_WebControl.CreateTickets(LTicketItemList, LActionList);   // Start Ticket Creation
         }
     }
 }
