@@ -28,6 +28,8 @@ namespace CS_KPMCreator
         }
         public void SetBrowser(RadioButton rbFirefox, RadioButton rbChrome)
         {
+            g_richTB_Status.Text = "I'm setting browser type...";
+
             if (rbFirefox.Checked == true)
             {
                 _driverSerivce = FirefoxDriverService.CreateDefaultService(); ;
@@ -56,6 +58,8 @@ namespace CS_KPMCreator
         }
         public void GoToTheSite(RadioButton rbB2B, RadioButton rbB2C, TextBox tB2BID, TextBox tB2BPW)
         {
+            g_richTB_Status.Text = "I'm accessing KPM...";
+
             rbB2B.Checked = true;
             rbB2C.Checked = false;
             if (rbB2C.Checked == true)
@@ -106,6 +110,8 @@ namespace CS_KPMCreator
 
         public void CreateTickets(List<Dictionary<string, string>> TicketItemList)
         {
+            g_richTB_Status.Text = "I'm creating KPM Ticket...";
+
             //Access each ticket items
             for (int nIdx = 0; nIdx < TicketItemList.Count; nIdx++)
             {
