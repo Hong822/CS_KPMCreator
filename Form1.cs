@@ -1,14 +1,8 @@
-﻿using OpenQA.Selenium;
-using OpenQA.Selenium.Chrome;
-using OpenQA.Selenium.Firefox;
-using OpenQA.Selenium.IE;
-using OpenQA.Selenium.Remote;
-using OpenQA.Selenium.Support.UI;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Windows.Forms;
-using Excel = Microsoft.Office.Interop.Excel;
+
 
 namespace CS_KPMCreator
 {
@@ -16,16 +10,12 @@ namespace CS_KPMCreator
     {
         private ExcelControl g_ExcelTool = new ExcelControl();
         private WebControl g_WebControl = new WebControl();
-        private List<Dictionary<string, string>> g_TicketItemList = new List<Dictionary<string, string>>();
-
-        protected String g_sWebtype = "";
-        protected DriverService _driverSerivce = null;
-        protected DriverOptions _options = null;
-        protected RemoteWebDriver _driver = null;
 
         public Form1()
         {
             InitializeComponent();
+            g_ExcelTool.SetStatusBox(ref richTB_Status);
+            g_WebControl.SetStatusBox(ref richTB_Status);
         }
 
         private void bExcelSelect_Click(object sender, EventArgs e)
@@ -42,105 +32,24 @@ namespace CS_KPMCreator
 
                 //tExcelPath.Text = ExcelOpenDialog.FileName;
                 tExcelPath.Text = Dir + "\\KPM_Ticket_Creator_V1.xlsm";
-
-                // Date read from Excel Files
-                ReadExcelValue();
-            }
-        }
-
-        private void ReadExcelValue()
-        {
-            // open KPM Doc
-            Excel.Application ap = new Excel.Application();
-            Excel.Workbook wb = ap.Workbooks.Open(tExcelPath.Text);
-            Excel.Worksheet ws_KPMCreate = wb.Worksheets["kpmcreate"];
-            ap.Visible = true;
-
-            // Fill in ticketItemList with ticket items
-            g_ExcelTool.FillDictionary(g_TicketItemList, ws_KPMCreate);
-        }
-
-        private void SetBrowser()
-        {
-            if (rbFirefox.Checked == true)
-            {
-                _driverSerivce = FirefoxDriverService.CreateDefaultService(); ;
-                _driverSerivce.HideCommandPromptWindow = true;
-                _options = new FirefoxOptions();
-                ((FirefoxOptions)_options).AddArgument("no-sandbox");
-                _driver = new FirefoxDriver((FirefoxDriverService)_driverSerivce, (FirefoxOptions)_options);
-                g_sWebtype = "Firefox";
-            }
-            else
-            {
-                if (rbChrome.Checked == true)
-                {
-                    _driverSerivce = ChromeDriverService.CreateDefaultService();
-                    _driverSerivce.HideCommandPromptWindow = true;
-                    _options = new ChromeOptions();
-                    _driver = new ChromeDriver((ChromeDriverService)_driverSerivce, (ChromeOptions)_options);
-                    g_sWebtype = "Chrome";
-                }
-                else // Default = IE
-                {
-                    _driverSerivce = InternetExplorerDriverService.CreateDefaultService(); ;
-                    _driverSerivce.HideCommandPromptWindow = true;
-                    _options = new InternetExplorerOptions();                    
-                    _driver = new InternetExplorerDriver((InternetExplorerDriverService)_driverSerivce, (InternetExplorerOptions)_options);
-                    g_sWebtype = "IE";
-                }
-            }
-        }
-        private void GoToTheSite()
-        {
-            rbB2B.Checked = true;
-            rbB2C.Checked = false;
-            if (rbB2C.Checked == true)
-            {
-                string URL = "https://quasi.vw.vwg/kpm/kpmweb";
-                _driver.Navigate().GoToUrl(URL);
-                //_driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(10);
-                MessageBox.Show("Wait!!! Login and Go to Main page. And then press OK", "Please Login KPM");
-            }
-            else
-            {
-                if (rbB2B.Checked == true)
-                {
-                    string sID = tB2BID.Text;
-                    string sPW = tB2BPW.Text;
-
-                    if (sID != null && sPW != null)
-                    {
-                        string URL = "https://" + sID + ":" + sPW + "@sso.volkswagen.de/kpmweb/Index.action";
-                        URL = "https://www.naver.com";
-                        URL = "https://quasi.vw.vwg/kpm/kpmweb";
-                        //URL = "https://www.google.com";
-                        //var wait = new WebDriverWait(_driver, new TimeSpan(0, 0, 1));
-                        _driver.Navigate().GoToUrl(URL);
-                        MessageBox.Show("Wait!!! Login and Go to Main page. And then press OK", "Please Login KPM");
-                        int awer = 1;
-                    }
-                    else
-                    {
-                        _driver.Navigate().GoToUrl("https://" + sID + ":" + sPW + "@sso.volkswagen.de/kpmweb/Index.action");
-                        _driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(5);
-                    }
-                }
             }
         }
 
         private void bStartCreation_Click(object sender, EventArgs e)
         {
-            SetBrowser();   // Get Browser
+            List<Dictionary<string, string>> LTicketItemList = new List<Dictionary<string, string>>();
+            List<Dictionary<string, string>> LActionList = new List<Dictionary<string, string>>();
 
-            GoToTheSite();  // Go to KPM site
-                        
-            g_WebControl.CreateTickets(g_TicketItemList);   // Start Ticket Creation
-        }
+            g_ExcelTool.ReadExcelValue(tExcelPath, rbB2B, rbB2C, rbAudi, rbPorsche, ref LTicketItemList, ref LActionList);   // Date read from Excel Files
 
-        private void rbChrome_CheckedChanged(object sender, EventArgs e)
-        {
+            richTB_Status.Text = "I'm setting browser type...";
+            g_WebControl.SetBrowser(rbFirefox, rbChrome);   // Get Browser
 
+            richTB_Status.Text = "I'm accessing KPM...";
+            g_WebControl.GoToTheSite(rbB2B, rbB2C, tB2BID, tB2BPW);  // Go to KPM site
+
+            richTB_Status.Text = "I'm creating KPM Ticket...";
+            g_WebControl.CreateTickets(LTicketItemList);   // Start Ticket Creation
         }
     }
 }

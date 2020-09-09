@@ -45,8 +45,13 @@ namespace CS_KPMCreator
             this.rbChrome = new System.Windows.Forms.RadioButton();
             this.rbFirefox = new System.Windows.Forms.RadioButton();
             this.rbIE = new System.Windows.Forms.RadioButton();
+            this.Brand = new System.Windows.Forms.GroupBox();
+            this.rbPorsche = new System.Windows.Forms.RadioButton();
+            this.rbAudi = new System.Windows.Forms.RadioButton();
+            this.richTB_Status = new System.Windows.Forms.RichTextBox();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
+            this.Brand.SuspendLayout();
             this.SuspendLayout();
             // 
             // bExcelSelect
@@ -74,10 +79,12 @@ namespace CS_KPMCreator
             // rbB2B
             // 
             this.rbB2B.AutoSize = true;
+            this.rbB2B.Checked = true;
             this.rbB2B.Location = new System.Drawing.Point(17, 30);
             this.rbB2B.Name = "rbB2B";
             this.rbB2B.Size = new System.Drawing.Size(45, 16);
             this.rbB2B.TabIndex = 2;
+            this.rbB2B.TabStop = true;
             this.rbB2B.Text = "B2B";
             this.rbB2B.UseVisualStyleBackColor = true;
             // 
@@ -134,18 +141,16 @@ namespace CS_KPMCreator
             // rbB2C
             // 
             this.rbB2C.AutoSize = true;
-            this.rbB2C.Checked = true;
             this.rbB2C.Location = new System.Drawing.Point(17, 66);
             this.rbB2C.Name = "rbB2C";
             this.rbB2C.Size = new System.Drawing.Size(46, 16);
             this.rbB2C.TabIndex = 3;
-            this.rbB2C.TabStop = true;
             this.rbB2C.Text = "B2C";
             this.rbB2C.UseVisualStyleBackColor = true;
             // 
             // bStartCreation
             // 
-            this.bStartCreation.Location = new System.Drawing.Point(40, 382);
+            this.bStartCreation.Location = new System.Drawing.Point(40, 421);
             this.bStartCreation.Name = "bStartCreation";
             this.bStartCreation.Size = new System.Drawing.Size(479, 56);
             this.bStartCreation.TabIndex = 4;
@@ -168,13 +173,12 @@ namespace CS_KPMCreator
             // rbChrome
             // 
             this.rbChrome.AutoSize = true;
-            this.rbChrome.Location = new System.Drawing.Point(306, 33);
+            this.rbChrome.Location = new System.Drawing.Point(390, 33);
             this.rbChrome.Name = "rbChrome";
-            this.rbChrome.Size = new System.Drawing.Size(161, 16);
+            this.rbChrome.Size = new System.Drawing.Size(68, 16);
             this.rbChrome.TabIndex = 2;
-            this.rbChrome.Text = "Chrome (Not supported)";
+            this.rbChrome.Text = "Chrome";
             this.rbChrome.UseVisualStyleBackColor = true;
-            this.rbChrome.CheckedChanged += new System.EventHandler(this.rbChrome_CheckedChanged);
             // 
             // rbFirefox
             // 
@@ -191,18 +195,61 @@ namespace CS_KPMCreator
             // rbIE
             // 
             this.rbIE.AutoSize = true;
-            this.rbIE.Location = new System.Drawing.Point(185, 33);
+            this.rbIE.Location = new System.Drawing.Point(226, 33);
             this.rbIE.Name = "rbIE";
             this.rbIE.Size = new System.Drawing.Size(115, 16);
             this.rbIE.TabIndex = 0;
             this.rbIE.Text = "Internet Explorer";
             this.rbIE.UseVisualStyleBackColor = true;
             // 
+            // Brand
+            // 
+            this.Brand.Controls.Add(this.rbPorsche);
+            this.Brand.Controls.Add(this.rbAudi);
+            this.Brand.Location = new System.Drawing.Point(40, 316);
+            this.Brand.Name = "Brand";
+            this.Brand.Size = new System.Drawing.Size(479, 38);
+            this.Brand.TabIndex = 6;
+            this.Brand.TabStop = false;
+            this.Brand.Text = "groupBox3";
+            // 
+            // rbPorsche
+            // 
+            this.rbPorsche.AutoSize = true;
+            this.rbPorsche.Location = new System.Drawing.Point(226, 16);
+            this.rbPorsche.Name = "rbPorsche";
+            this.rbPorsche.Size = new System.Drawing.Size(70, 16);
+            this.rbPorsche.TabIndex = 1;
+            this.rbPorsche.Text = "Porsche";
+            this.rbPorsche.UseVisualStyleBackColor = true;
+            // 
+            // rbAudi
+            // 
+            this.rbAudi.AutoSize = true;
+            this.rbAudi.Checked = true;
+            this.rbAudi.Location = new System.Drawing.Point(18, 16);
+            this.rbAudi.Name = "rbAudi";
+            this.rbAudi.Size = new System.Drawing.Size(48, 16);
+            this.rbAudi.TabIndex = 0;
+            this.rbAudi.TabStop = true;
+            this.rbAudi.Text = "Audi";
+            this.rbAudi.UseVisualStyleBackColor = true;
+            // 
+            // richTB_Status
+            // 
+            this.richTB_Status.Location = new System.Drawing.Point(42, 373);
+            this.richTB_Status.Name = "richTB_Status";
+            this.richTB_Status.Size = new System.Drawing.Size(477, 36);
+            this.richTB_Status.TabIndex = 7;
+            this.richTB_Status.Text = "";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(555, 450);
+            this.ClientSize = new System.Drawing.Size(555, 489);
+            this.Controls.Add(this.richTB_Status);
+            this.Controls.Add(this.Brand);
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.bStartCreation);
             this.Controls.Add(this.groupBox1);
@@ -214,6 +261,8 @@ namespace CS_KPMCreator
             this.groupBox1.PerformLayout();
             this.groupBox2.ResumeLayout(false);
             this.groupBox2.PerformLayout();
+            this.Brand.ResumeLayout(false);
+            this.Brand.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -235,6 +284,10 @@ namespace CS_KPMCreator
         private System.Windows.Forms.RadioButton rbChrome;
         private System.Windows.Forms.RadioButton rbFirefox;
         private System.Windows.Forms.RadioButton rbIE;
+        private System.Windows.Forms.GroupBox Brand;
+        private System.Windows.Forms.RadioButton rbPorsche;
+        private System.Windows.Forms.RadioButton rbAudi;
+        private System.Windows.Forms.RichTextBox richTB_Status;
     }
 }
 
