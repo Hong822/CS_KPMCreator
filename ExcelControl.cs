@@ -1,37 +1,119 @@
 ﻿using Microsoft.Office.Interop.Excel;
 using System;
 using System.Collections.Generic;
-using Excel = Microsoft.Office.Interop.Excel;
 using System.Windows.Forms;
+
+using Excel = Microsoft.Office.Interop.Excel;
 
 namespace CS_KPMCreator
 {
     internal class ExcelControl
     {
-        RichTextBox g_richTB_Status = null;
+        private RichTextBox g_richTB_Status = null;
+        private Excel.Application g_KPMExcel = null;
+        private Excel.Workbook g_KPMWB = null;
 
         public void SetStatusBox(ref RichTextBox richTB_Status)
         {
             g_richTB_Status = richTB_Status;
         }
 
+        public void CloseExcelControl()
+        {
+            if (g_KPMWB != null)
+            {
+                DebugPrint("I'm saving Excel File...");
+                g_KPMWB.Save();
+                g_KPMWB = null;
+            }
+            if (g_KPMExcel != null)
+            {
+                DebugPrint("I'm closing Excel File...");
+                g_KPMExcel.Quit();
+                g_KPMExcel = null;
+            }
+        }
+
+        public void DebugPrint(string sDebugString)
+        {
+            g_richTB_Status.Text = sDebugString;
+            System.Diagnostics.Debug.WriteLine(sDebugString);
+        }
+
+        private int FindColumn(Range rRow, string ColName)
+        {
+            int nCurCol = 1;
+
+            while (rRow.Cells[1, nCurCol].Value != null)
+            {
+                if (rRow.Cells[1, nCurCol].Value == ColName)
+                {
+                    break;
+                }
+                nCurCol++;
+            }
+
+            return nCurCol;
+        }
+
+        private int LastRowPerColumn(Range rCol)
+        {
+            int nLastRow = 1;
+
+            while (rCol.Cells[nLastRow, 1].Value != null)
+            {
+                nLastRow++;
+            }
+
+            return nLastRow;
+        }
+
+        private int LastColumnPerRow(Range rRow)
+        {
+            int nLastCol = 1;
+
+            while (rRow.Cells[1, nLastCol].Value != null)
+            {
+                nLastCol++;
+            }
+
+            return nLastCol;
+        }
+
+        public void FillDictionary(List<Dictionary<string, string>> TicketItemList, Worksheet ws, int nStartRow, int nEndRow, int nStartCol, int nEndCol)
+        {
+            // Read and setting relevant data
+            for (int RowIdx = nStartRow; RowIdx < nEndRow; RowIdx++)
+            {
+                Dictionary<string, string> NewItem = new Dictionary<string, string>();
+                for (int ColIdx = nStartCol; ColIdx < nEndCol; ColIdx++)
+                {
+                    string sKey = Convert.ToString(((Range)ws.Cells[1, ColIdx]).Value);
+                    string sVal = Convert.ToString(((Range)ws.Cells[RowIdx, ColIdx]).Value);
+                    NewItem.Add(sKey, sVal);
+                }
+
+                TicketItemList.Add(NewItem);
+            }
+        }
+
         public void ReadExcelValue(System.Windows.Forms.TextBox tExcelPath, RadioButton rbB2B, RadioButton rbB2C, RadioButton rbAudi, RadioButton rbPorsche, ref List<Dictionary<string, string>> LTicketItemList, ref List<Dictionary<string, string>> LActionList)
         {
-            g_richTB_Status.Text = "I'm reading KPM Excel file...";
+            DebugPrint("I'm reading KPM Excel File...");
 
             // ***Setting KPM Items***
-            Excel.Application ap = new Excel.Application();
-            Excel.Workbook wb = null;
+            g_KPMExcel = new Excel.Application();
             try
             {
-                wb = ap.Workbooks.Open(tExcelPath.Text);
+                g_KPMWB = g_KPMExcel.Workbooks.Open(tExcelPath.Text);
             }
             catch
             {
                 MessageBox.Show("Please Select Excel Path.");
             }
-            Excel.Worksheet ws_KPMCreate = wb.Worksheets["kpmcreate"];
-            ap.Visible = true;
+            Excel.Worksheet ws_KPMCreate = g_KPMWB.Worksheets["kpmcreate"];
+            g_KPMExcel.Visible = true;
+            //ap.Visible = false;
 
             int nStartRow, nEndRow, nStartCol, nEndCol;
             nStartRow = 2;
@@ -43,10 +125,12 @@ namespace CS_KPMCreator
             FillDictionary(LTicketItemList, ws_KPMCreate, nStartRow, nEndRow, nStartCol, nEndCol);
 
             // ***Setting Actions***
-            g_richTB_Status.Text = "I'm reading Action Excel file...";
+            DebugPrint("I'm reading Action Excel File...");
 
             Excel.Application ActionApp = new Excel.Application();
-            string ActionExcelPath = "E:\\VS_Project\\repos\\Hong822\\CS_KPMCreator\\KPM_Action_Description.xlsm";
+            //string ActionExcelPath = "E:\\VS_Project\\repos\\Hong822\\CS_KPMCreator\\KPM_Action_Description.xlsm";
+            string ActionExcelPath = "D:\\25_C_Projects\\Repos\\Hong822\\CS_KPMCreator\\KPM_Action_Description.xlsm";
+
             Excel.Workbook ActionWB = null;
             try
             {
@@ -95,47 +179,39 @@ namespace CS_KPMCreator
             nStartCol = 1;
             nEndCol = LastColumnPerRow(ActionWS.get_Range("1:1"));
             FillDictionary(LActionList, ActionWS, nStartRow, nEndRow, nStartCol, nEndCol);
+
+            if (ActionApp.Visible == false)
+            {
+                ActionApp.Quit();
+            }
         }
 
-        private int LastRowPerColumn(Range rCol)
+        public void UpdateKPMDocument(List<Dictionary<string, string>> LTicketItemList)
         {
-            int nLastRow = 1;
+            DebugPrint("I'm updating Excel File...");
 
-            while (rCol.Cells[nLastRow, 1].Value != null)
+            Excel.Worksheet ws_KPMCreate = g_KPMWB.Worksheets["kpmcreate"];
+            int nNumberCol = FindColumn(ws_KPMCreate.get_Range("1:1"), "Number");
+            int nUploadCol = FindColumn(ws_KPMCreate.get_Range("1:1"), "Re-upload Attachment");
+
+            int nCurKPMSheetRow = 2;
+            for (int nIdx = 0; nIdx < LTicketItemList.Count; nIdx++)
             {
-                nLastRow++;
+                Dictionary<string, string> TicketItem = LTicketItemList[nIdx];
+                string nTicketNum = TicketItem["Number"];
+                string Upload = TicketItem["Re-upload Attachment"];
+
+                ((Range)ws_KPMCreate.Cells[nCurKPMSheetRow, nNumberCol]).Value = nTicketNum;
+                ((Range)ws_KPMCreate.Cells[nCurKPMSheetRow, nUploadCol]).Value = Upload;
+                nCurKPMSheetRow++;
             }
 
-            return nLastRow;
-        }
-
-        private int LastColumnPerRow(Range rRow)
-        {
-            int nLastCol = 1;
-
-            while (rRow.Cells[1, nLastCol].Value != null)
-            {
-                nLastCol++;
-            }
-
-            return nLastCol;
-        }
-
-        public void FillDictionary(List<Dictionary<string, string>> TicketItemList, Worksheet ws, int nStartRow, int nEndRow, int nStartCol, int nEndCol)
-        {
-            // Read and setting relevant data            
-            for (int RowIdx = nStartRow; RowIdx < nEndRow; RowIdx++)
-            {
-                Dictionary<string, string> NewItem = new Dictionary<string, string>();
-                for (int ColIdx = nStartCol; ColIdx < nEndCol; ColIdx++)
-                {
-                    string sKey = Convert.ToString(((Range)ws.Cells[1, ColIdx]).Value);
-                    string sVal = Convert.ToString(((Range)ws.Cells[RowIdx, ColIdx]).Value);
-                    NewItem.Add(sKey, sVal);
-                }
-
-                TicketItemList.Add(NewItem);
-            }
+            DebugPrint("I'm saving Excel File...");
+            g_KPMWB.Save();
+            g_KPMWB = null;
+            DebugPrint("I'm closing Excel File...");
+            g_KPMExcel.Quit();
+            g_KPMExcel = null;
         }
     }
 }

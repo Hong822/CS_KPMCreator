@@ -183,23 +183,23 @@ namespace CS_KPMCreator
             // rbFirefox
             // 
             this.rbFirefox.AutoSize = true;
-            this.rbFirefox.Checked = true;
-            this.rbFirefox.Location = new System.Drawing.Point(18, 33);
+            this.rbFirefox.Location = new System.Drawing.Point(275, 33);
             this.rbFirefox.Name = "rbFirefox";
-            this.rbFirefox.Size = new System.Drawing.Size(161, 16);
+            this.rbFirefox.Size = new System.Drawing.Size(61, 16);
             this.rbFirefox.TabIndex = 1;
-            this.rbFirefox.TabStop = true;
-            this.rbFirefox.Text = "Firefox (Recommended)";
+            this.rbFirefox.Text = "Firefox";
             this.rbFirefox.UseVisualStyleBackColor = true;
             // 
             // rbIE
             // 
             this.rbIE.AutoSize = true;
-            this.rbIE.Location = new System.Drawing.Point(226, 33);
+            this.rbIE.Checked = true;
+            this.rbIE.Location = new System.Drawing.Point(18, 33);
             this.rbIE.Name = "rbIE";
-            this.rbIE.Size = new System.Drawing.Size(115, 16);
+            this.rbIE.Size = new System.Drawing.Size(211, 16);
             this.rbIE.TabIndex = 0;
-            this.rbIE.Text = "Internet Explorer";
+            this.rbIE.TabStop = true;
+            this.rbIE.Text = "Internet Explorer(Recommended)";
             this.rbIE.UseVisualStyleBackColor = true;
             // 
             // Brand
@@ -211,7 +211,7 @@ namespace CS_KPMCreator
             this.Brand.Size = new System.Drawing.Size(479, 38);
             this.Brand.TabIndex = 6;
             this.Brand.TabStop = false;
-            this.Brand.Text = "groupBox3";
+            this.Brand.Text = "Brand";
             // 
             // rbPorsche
             // 
@@ -256,7 +256,7 @@ namespace CS_KPMCreator
             this.Controls.Add(this.tExcelPath);
             this.Controls.Add(this.bExcelSelect);
             this.Name = "Form1";
-            this.Text = "Form1";
+            this.Text = "KPM Creator V1.0";
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             this.groupBox2.ResumeLayout(false);
