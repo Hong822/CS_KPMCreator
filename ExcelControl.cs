@@ -10,8 +10,9 @@ namespace CS_KPMCreator
     internal class ExcelControl
     {
         private RichTextBox g_richTB_Status = null;
-        private Excel.Application g_KPMExcel = null;
-        private Excel.Workbook g_KPMWB = null;
+        private Excel.Application g_KPMExcelApp = null;
+        private Excel.Workbook g_KPMWorkbook = null;
+        private Excel.Worksheet g_KPMCreate_Worksheet = null;
 
         public void SetStatusBox(ref RichTextBox richTB_Status)
         {
@@ -20,17 +21,47 @@ namespace CS_KPMCreator
 
         public void CloseExcelControl()
         {
-            if (g_KPMWB != null)
+            if (g_KPMCreate_Worksheet != null)
+            {
+                System.Runtime.InteropServices.Marshal.ReleaseComObject(g_KPMCreate_Worksheet);
+            }
+            if (g_KPMWorkbook != null)
             {
                 DebugPrint("I'm saving Excel File...");
-                g_KPMWB.Save();
-                g_KPMWB = null;
+                g_KPMWorkbook.Save();
+                g_KPMWorkbook.Close();
+                System.Runtime.InteropServices.Marshal.ReleaseComObject(g_KPMWorkbook);
+                g_KPMWorkbook = null;
             }
-            if (g_KPMExcel != null)
+            if (g_KPMExcelApp != null)
             {
                 DebugPrint("I'm closing Excel File...");
-                g_KPMExcel.Quit();
-                g_KPMExcel = null;
+                g_KPMExcelApp.Quit();
+                System.Runtime.InteropServices.Marshal.ReleaseComObject(g_KPMExcelApp);
+                g_KPMExcelApp = null;
+            }
+        }
+
+        public void CloseExcelControl(ref Excel.Worksheet ws, ref Excel.Workbook wb , ref Excel.Application app )
+        {
+            if(ws!= null)
+            {
+                System.Runtime.InteropServices.Marshal.ReleaseComObject(ws);
+            }
+            if (wb != null)
+            {
+                DebugPrint("I'm saving Excel File...");
+                wb.Save();
+                wb.Close();
+                System.Runtime.InteropServices.Marshal.ReleaseComObject(wb);
+                wb = null;
+            }
+            if (app != null)
+            {
+                DebugPrint("I'm closing Excel File...");
+                app.Quit();
+                System.Runtime.InteropServices.Marshal.ReleaseComObject(app);
+                app = null;
             }
         }
 
@@ -97,51 +128,69 @@ namespace CS_KPMCreator
             }
         }
 
-        public void ReadExcelValue(System.Windows.Forms.TextBox tExcelPath, RadioButton rbB2B, RadioButton rbB2C, RadioButton rbAudi, RadioButton rbPorsche, ref List<Dictionary<string, string>> LTicketItemList, ref List<Dictionary<string, string>> LActionList)
+        public bool ReadExcelValue(System.Windows.Forms.TextBox tExcelPath, RadioButton rbB2B, RadioButton rbB2C, RadioButton rbAudi, RadioButton rbPorsche, ref List<Dictionary<string, string>> LTicketItemList, ref List<Dictionary<string, string>> LActionList)
         {
             DebugPrint("I'm reading KPM Excel File...");
 
             // ***Setting KPM Items***
-            g_KPMExcel = new Excel.Application();
+            g_KPMExcelApp = new Excel.Application();
             try
             {
-                g_KPMWB = g_KPMExcel.Workbooks.Open(tExcelPath.Text);
+                tExcelPath.Text = "E:\\VS_Project\\repos\\Hong822\\CS_KPMCreator\\KPM_Ticket_Creator_V1.xlsm";
+                g_KPMWorkbook = g_KPMExcelApp.Workbooks.Open(tExcelPath.Text);
+                if (g_KPMWorkbook.ReadOnly == true)
+                {
+                    DebugPrint("Please Close KPM Excel File and Open with Write Autority...");
+                    CloseExcelControl(ref g_KPMCreate_Worksheet, ref g_KPMWorkbook, ref g_KPMExcelApp);
+                    return false;
+                }
             }
             catch
             {
-                MessageBox.Show("Please Select Excel Path.");
+                DebugPrint("Please Select Excel Path.");
+                CloseExcelControl(ref g_KPMCreate_Worksheet, ref g_KPMWorkbook, ref g_KPMExcelApp);
+                return false;
             }
-            Excel.Worksheet ws_KPMCreate = g_KPMWB.Worksheets["kpmcreate"];
-            g_KPMExcel.Visible = true;
+            
+            g_KPMCreate_Worksheet = g_KPMWorkbook.Worksheets["kpmcreate"];
+            g_KPMExcelApp.Visible = true;
             //ap.Visible = false;
 
             int nStartRow, nEndRow, nStartCol, nEndCol;
             nStartRow = 2;
-            nEndRow = LastRowPerColumn(ws_KPMCreate.get_Range("C:C"));
+
+            //int STCol = FindColumn(g_KPMCreate_Worksheet.get_Range("1:1"), "Short Text");
+            //string tempRange = STCol + ":" + STCol;
+            //nEndRow = LastRowPerColumn(g_KPMCreate_Worksheet.get_Range(tempRange));
+            nEndRow = LastRowPerColumn(g_KPMCreate_Worksheet.get_Range("K:K"));
+
             nStartCol = 1;
-            nEndCol = LastColumnPerRow(ws_KPMCreate.get_Range("1:1"));
+            nEndCol = LastColumnPerRow(g_KPMCreate_Worksheet.get_Range("1:1"));
 
             // Fill in ticketItemList with ticket items
-            FillDictionary(LTicketItemList, ws_KPMCreate, nStartRow, nEndRow, nStartCol, nEndCol);
+            FillDictionary(LTicketItemList, g_KPMCreate_Worksheet, nStartRow, nEndRow, nStartCol, nEndCol);
 
             // ***Setting Actions***
             DebugPrint("I'm reading Action Excel File...");
 
             Excel.Application ActionApp = new Excel.Application();
-            //string ActionExcelPath = "E:\\VS_Project\\repos\\Hong822\\CS_KPMCreator\\KPM_Action_Description.xlsm";
-            string ActionExcelPath = "D:\\25_C_Projects\\Repos\\Hong822\\CS_KPMCreator\\KPM_Action_Description.xlsm";
-
             Excel.Workbook ActionWB = null;
+            Excel.Worksheet ActionWS = null;
+
+            string ActionExcelPath = "E:\\VS_Project\\repos\\Hong822\\CS_KPMCreator\\KPM_Action_Description.xlsm";
+            //string ActionExcelPath = "D:\\25_C_Projects\\Repos\\Hong822\\CS_KPMCreator\\KPM_Action_Description.xlsm";
+            
             try
             {
                 ActionWB = ActionApp.Workbooks.Open(ActionExcelPath);
             }
             catch
             {
-                MessageBox.Show("Please check " + ActionExcelPath + ".");
+                DebugPrint("Please check " + ActionExcelPath + ".");
+                CloseExcelControl(ref ActionWS, ref ActionWB, ref ActionApp);
+                return false;
             }
-
-            Excel.Worksheet ActionWS = null;
+            
             if (rbB2B.Checked == true)
             {
                 if (rbPorsche.Checked == true)
@@ -175,6 +224,9 @@ namespace CS_KPMCreator
 
             // Fill in ticketItemList with ticket items
             nStartRow = 2;
+            //STCol = FindColumn(ActionWS.get_Range("1:1"), "Step");
+            //tempRange = STCol + ":" + STCol;
+            //nEndRow = LastRowPerColumn(ActionWS.get_Range(tempRange));
             nEndRow = LastRowPerColumn(ActionWS.get_Range("A:A"));
             nStartCol = 1;
             nEndCol = LastColumnPerRow(ActionWS.get_Range("1:1"));
@@ -182,17 +234,22 @@ namespace CS_KPMCreator
 
             if (ActionApp.Visible == false)
             {
-                ActionApp.Quit();
+                CloseExcelControl(ref ActionWS, ref ActionWB, ref ActionApp);
             }
+            else
+            {
+                // TODO: Close Excel Objects
+            }
+
+            return true;
         }
 
         public void UpdateKPMDocument(List<Dictionary<string, string>> LTicketItemList)
         {
             DebugPrint("I'm updating Excel File...");
 
-            Excel.Worksheet ws_KPMCreate = g_KPMWB.Worksheets["kpmcreate"];
-            int nNumberCol = FindColumn(ws_KPMCreate.get_Range("1:1"), "Number");
-            int nUploadCol = FindColumn(ws_KPMCreate.get_Range("1:1"), "Re-upload Attachment");
+            int nNumberCol = FindColumn(g_KPMCreate_Worksheet.get_Range("1:1"), "Number");
+            int nUploadCol = FindColumn(g_KPMCreate_Worksheet.get_Range("1:1"), "Re-upload Attachment");
 
             int nCurKPMSheetRow = 2;
             for (int nIdx = 0; nIdx < LTicketItemList.Count; nIdx++)
@@ -201,17 +258,13 @@ namespace CS_KPMCreator
                 string nTicketNum = TicketItem["Number"];
                 string Upload = TicketItem["Re-upload Attachment"];
 
-                ((Range)ws_KPMCreate.Cells[nCurKPMSheetRow, nNumberCol]).Value = nTicketNum;
-                ((Range)ws_KPMCreate.Cells[nCurKPMSheetRow, nUploadCol]).Value = Upload;
+                ((Range)g_KPMCreate_Worksheet.Cells[nCurKPMSheetRow, nNumberCol]).Value = nTicketNum;
+                ((Range)g_KPMCreate_Worksheet.Cells[nCurKPMSheetRow, nUploadCol]).Value = Upload;
                 nCurKPMSheetRow++;
             }
 
             DebugPrint("I'm saving Excel File...");
-            g_KPMWB.Save();
-            g_KPMWB = null;
-            DebugPrint("I'm closing Excel File...");
-            g_KPMExcel.Quit();
-            g_KPMExcel = null;
+            g_KPMWorkbook.Save();
         }
     }
 }

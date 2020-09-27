@@ -41,42 +41,52 @@ namespace CS_KPMCreator
 
             var nStartTick = DateTime.Now;
 
-            g_ExcelTool.ReadExcelValue(tExcelPath, rbB2B, rbB2C, rbAudi, rbPorsche, ref LTicketItemList, ref LActionList);   // Date read from Excel Files
-
-            if (rbIE.Checked == true)
+            bool bExcelReadResult = true;
+            bool bCreateResult = false;
+            int tryCnt = 0;
+            if (g_ExcelTool.ReadExcelValue(tExcelPath, rbB2B, rbB2C, rbAudi, rbPorsche, ref LTicketItemList, ref LActionList) == true)   // Data read from Excel Files
             {
-                g_WebControl = new WebControl_SHDoc();
+                if (rbIE.Checked == true)
+                {
+                    g_WebControl = new WebControl_SHDoc();
+                }
+                else
+                {
+                    g_WebControl = new WebControl_SHDoc();
+                }
+                g_WebControl.SetStatusBox(ref richTB_Status);
+
+                g_WebControl.OpenWebSite(rbB2B, rbB2C, tB2BID, tB2BPW);  // Go to KPM site
+                g_WebControl.GoToMainPage(LActionList[0]);
+                
+                while (bCreateResult == false && tryCnt < 3)
+                {
+                    bCreateResult = g_WebControl.CreateTickets(ref LTicketItemList, ref LActionList);   // Start Ticket Creation
+                    tryCnt++;
+                }
+
+                g_ExcelTool.UpdateKPMDocument(LTicketItemList);
             }
             else
             {
-                g_WebControl = new WebControl_SHDoc();
+                bExcelReadResult = false;
             }
-            g_WebControl.SetStatusBox(ref richTB_Status);
-
-            g_WebControl.OpenWebSite(rbB2B, rbB2C, tB2BID, tB2BPW);  // Go to KPM site
-            g_WebControl.GoToMainPage(LActionList[0]);
-            bool bCreateResult = false;
-            int tryCnt = 0;
-            while (bCreateResult == false && tryCnt < 3)
-            {
-                bCreateResult = g_WebControl.CreateTickets(ref LTicketItemList, ref LActionList);   // Start Ticket Creation
-                tryCnt++;
-            }
-
-            g_ExcelTool.UpdateKPMDocument(LTicketItemList);
-
             var nEndTick = DateTime.Now;
             long nGap = nEndTick.Ticks - nStartTick.Ticks;
             var nDiffSpan = new TimeSpan(nGap);
 
             string ResultReport = "";
-            if (bCreateResult == false)
+            if (bExcelReadResult == false)
             {
-                ResultReport = "Something happen. Please try it later";
+                ResultReport = "[Abnormal Termination!] Excel Path is Strange. Please check your Excel File.";
+            }
+            else if (bCreateResult == false)
+            {
+                ResultReport = "[Abnormal Termination!] Something happen during creation. Please try it later. Try Count= "+ tryCnt;
             }
             else
             {
-                ResultReport = "Finish.  " + LTicketItemList.Count + "Tickets (" + nDiffSpan.Hours + "hr:" + nDiffSpan.Minutes + "min:" + nDiffSpan.Seconds + "sec)";
+                ResultReport = "Creation Success. " + LTicketItemList.Count + " Tickets (" + nDiffSpan.Hours + "hr:" + nDiffSpan.Minutes + "min:" + nDiffSpan.Seconds + "sec). Try Count= " + tryCnt;
             }
 
             richTB_Status.Text = ResultReport;

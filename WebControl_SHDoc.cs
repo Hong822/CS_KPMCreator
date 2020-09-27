@@ -103,7 +103,7 @@ namespace CS_KPMCreator
                     }
                 }
 
-                if (dItem["Re-upload Attachment"] != "X" && dItem["Documents"] != null)
+                if ( (dItem["Re-upload Attachment"] == "O" || dItem["Re-upload Attachment"] == null ) && dItem["Documents"] != null)
                 {
                     if (GoToAttachmentPage(ref dItem, ref LActionList) == false)
                     {
@@ -162,10 +162,19 @@ namespace CS_KPMCreator
             bool bResult = true;
 
             string[] attachments = TicketItem["Documents"].Split('\n');
-            string[] Commants = TicketItem["Doc Comment"].Split('\n');
+            string[] Comments = TicketItem["Doc Comment"].Split('\n');
 
-            int nSize = attachments.Length;
-            for (int idx = 0; idx < nSize; idx++)
+            int nAttSize = attachments.Length;
+            int nCommentSize = Comments.Length;
+
+            if(nAttSize != nCommentSize)
+            {
+                TicketItem["Re-upload Attachment"] = "Attachment/Comment Unmatching!";
+                bResult = false;
+                return bResult;
+            }
+
+            for (int idx = 0; idx < nAttSize; idx++)
             {
                 for (int nIdx = 0; nIdx < LActionList.Count; nIdx++)
                 {
@@ -175,7 +184,7 @@ namespace CS_KPMCreator
                         string nText = null;
                         if (ActionItem["InputString"] == "Doc Comment")
                         {
-                            nText = Commants[idx];
+                            nText = Comments[idx];
                         }
                         else if (ActionItem["InputString"] == "Documents")
                         {
