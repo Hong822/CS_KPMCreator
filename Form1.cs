@@ -36,6 +36,8 @@ namespace CS_KPMCreator
 
         private void bStartCreation_Click(object sender, EventArgs e)
         {
+            rbKPMRead.Checked = true;
+
             List<Dictionary<string, string>> LTicketItemList = new List<Dictionary<string, string>>();
             List<Dictionary<string, string>> LActionList = new List<Dictionary<string, string>>();
 
@@ -44,7 +46,7 @@ namespace CS_KPMCreator
             bool bExcelReadResult = true;
             bool bCreateResult = false;
             int tryCnt = 0;
-            if (g_ExcelTool.ReadExcelValue(tExcelPath, rbB2B, rbB2C, rbAudi, rbPorsche, ref LTicketItemList, ref LActionList) == true)   // Data read from Excel Files
+            if (g_ExcelTool.ReadExcelValue(tExcelPath, rbB2B, rbB2C, rbAudi, rbPorsche, rbKPMRead, ref LTicketItemList, ref LActionList) == true)   // Data read from Excel Files
             {
                 if (rbIE.Checked == true)
                 {
@@ -56,13 +58,26 @@ namespace CS_KPMCreator
                 }
                 g_WebControl.SetStatusBox(ref richTB_Status);
 
-                g_WebControl.OpenWebSite(rbB2B, rbB2C, tB2BID, tB2BPW);  // Go to KPM site
+                g_WebControl.OpenWebSite(rbB2B, rbB2C, rbKPMRead, tB2BID, tB2BPW);  // Go to KPM site
                 g_WebControl.GoToMainPage(LActionList[0]);
-                
-                while (bCreateResult == false && tryCnt < 3)
+
+                if (rbKPMRead.Checked == true)                {
+                    
+
+                    while (bCreateResult == false && tryCnt < 3)
+                    {
+                        bCreateResult = g_WebControl.KPMRead(ref LActionList, ref g_ExcelTool);   // Start Ticket Creation
+                        tryCnt++;
+                    }
+
+                }
+                else
                 {
-                    bCreateResult = g_WebControl.CreateTickets(ref LTicketItemList, ref LActionList);   // Start Ticket Creation
-                    tryCnt++;
+                    while (bCreateResult == false && tryCnt < 3)
+                    {
+                        bCreateResult = g_WebControl.CreateTickets(ref LTicketItemList, ref LActionList);   // Start Ticket Creation
+                        tryCnt++;
+                    }
                 }
 
                 g_ExcelTool.UpdateKPMDocument(LTicketItemList);
@@ -78,7 +93,7 @@ namespace CS_KPMCreator
             string ResultReport = "";
             if (bExcelReadResult == false)
             {
-                ResultReport = "[Abnormal Termination!] Excel Path is Strange. Please check your Excel File.";
+                ResultReport = "[Abnormal Termination!] Excel Path is Strange or ReadOnly. Please check your Excel File.";
             }
             else if (bCreateResult == false)
             {
@@ -101,6 +116,6 @@ namespace CS_KPMCreator
             //{
             //    int ete = 2;
             //}
-        }
+        }       
     }
 }

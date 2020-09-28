@@ -1,6 +1,7 @@
 ﻿using Microsoft.Office.Interop.Excel;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows.Forms;
 
 using Excel = Microsoft.Office.Interop.Excel;
@@ -28,7 +29,10 @@ namespace CS_KPMCreator
             if (g_KPMWorkbook != null)
             {
                 DebugPrint("I'm saving Excel File...");
-                g_KPMWorkbook.Save();
+                if (g_KPMWorkbook.ReadOnly == false)
+                {
+                    g_KPMWorkbook.Save();
+                }
                 g_KPMWorkbook.Close();
                 System.Runtime.InteropServices.Marshal.ReleaseComObject(g_KPMWorkbook);
                 g_KPMWorkbook = null;
@@ -42,16 +46,19 @@ namespace CS_KPMCreator
             }
         }
 
-        public void CloseExcelControl(ref Excel.Worksheet ws, ref Excel.Workbook wb , ref Excel.Application app )
+        public void CloseExcelControl(ref Excel.Worksheet ws, ref Excel.Workbook wb, ref Excel.Application app)
         {
-            if(ws!= null)
+            if (ws != null)
             {
                 System.Runtime.InteropServices.Marshal.ReleaseComObject(ws);
             }
             if (wb != null)
             {
                 DebugPrint("I'm saving Excel File...");
-                wb.Save();
+                if (wb.ReadOnly == false)
+                {
+                    wb.Save();
+                }
                 wb.Close();
                 System.Runtime.InteropServices.Marshal.ReleaseComObject(wb);
                 wb = null;
@@ -128,7 +135,7 @@ namespace CS_KPMCreator
             }
         }
 
-        public bool ReadExcelValue(System.Windows.Forms.TextBox tExcelPath, RadioButton rbB2B, RadioButton rbB2C, RadioButton rbAudi, RadioButton rbPorsche, ref List<Dictionary<string, string>> LTicketItemList, ref List<Dictionary<string, string>> LActionList)
+        public bool ReadExcelValue(System.Windows.Forms.TextBox tExcelPath, RadioButton rbB2B, RadioButton rbB2C, RadioButton rbAudi, RadioButton rbPorsche, RadioButton rbKPMRead, ref List<Dictionary<string, string>> LTicketItemList, ref List<Dictionary<string, string>> LActionList)
         {
             DebugPrint("I'm reading KPM Excel File...");
 
@@ -138,7 +145,7 @@ namespace CS_KPMCreator
             {
                 tExcelPath.Text = "E:\\VS_Project\\repos\\Hong822\\CS_KPMCreator\\KPM_Ticket_Creator_V1.xlsm";
                 g_KPMWorkbook = g_KPMExcelApp.Workbooks.Open(tExcelPath.Text);
-                if (g_KPMWorkbook.ReadOnly == true)
+                if (g_KPMWorkbook.ReadOnly == true && rbKPMRead.Checked == false)
                 {
                     DebugPrint("Please Close KPM Excel File and Open with Write Autority...");
                     CloseExcelControl(ref g_KPMCreate_Worksheet, ref g_KPMWorkbook, ref g_KPMExcelApp);
@@ -151,10 +158,10 @@ namespace CS_KPMCreator
                 CloseExcelControl(ref g_KPMCreate_Worksheet, ref g_KPMWorkbook, ref g_KPMExcelApp);
                 return false;
             }
-            
+
             g_KPMCreate_Worksheet = g_KPMWorkbook.Worksheets["kpmcreate"];
             g_KPMExcelApp.Visible = true;
-            //ap.Visible = false;
+            //g_KPMExcelApp.Visible = false;
 
             int nStartRow, nEndRow, nStartCol, nEndCol;
             nStartRow = 2;
@@ -179,7 +186,7 @@ namespace CS_KPMCreator
 
             string ActionExcelPath = "E:\\VS_Project\\repos\\Hong822\\CS_KPMCreator\\KPM_Action_Description.xlsm";
             //string ActionExcelPath = "D:\\25_C_Projects\\Repos\\Hong822\\CS_KPMCreator\\KPM_Action_Description.xlsm";
-            
+
             try
             {
                 ActionWB = ActionApp.Workbooks.Open(ActionExcelPath);
@@ -190,37 +197,39 @@ namespace CS_KPMCreator
                 CloseExcelControl(ref ActionWS, ref ActionWB, ref ActionApp);
                 return false;
             }
-            
-            if (rbB2B.Checked == true)
+
+            if (rbKPMRead.Checked == true)
             {
-                if (rbPorsche.Checked == true)
-                {
-                    ActionWS = ActionWB.Worksheets["PO_B2B"];
-                }
-                else
-                {
-                    ActionWS = ActionWB.Worksheets["AU_B2B"];
-                }
+                ActionWS = ActionWB.Worksheets["KPMRead"];
             }
             else
             {
-                if (rbB2C.Checked == true)
+                if (rbPorsche.Checked == true)
                 {
-                    if (rbPorsche.Checked == true)
+                    if (rbB2B.Checked == true)
+                    {
+                        ActionWS = ActionWB.Worksheets["PO_B2B"];
+                    }
+                    else
                     {
                         ActionWS = ActionWB.Worksheets["PO_B2C"];
+                    }
+                }
+                else    // Audi
+                {
+                    if (rbB2B.Checked == true)
+                    {
+                        ActionWS = ActionWB.Worksheets["AU_B2B"];
                     }
                     else
                     {
                         ActionWS = ActionWB.Worksheets["AU_B2C"];
                     }
                 }
-                else
-                {
-                    // it's invalid condition.
-                }
             }
+
             ActionApp.Visible = false;
+            //ActionApp.Visible = true;
 
             // Fill in ticketItemList with ticket items
             nStartRow = 2;
@@ -264,7 +273,65 @@ namespace CS_KPMCreator
             }
 
             DebugPrint("I'm saving Excel File...");
-            g_KPMWorkbook.Save();
+            if (g_KPMWorkbook.ReadOnly == false)
+            {
+                g_KPMWorkbook.Save();
+            }
+        }
+
+        public void UpdateKPMReadSheet(List<Dictionary<KPMReadInfo, List<string>>> ReadList)
+        {
+            DebugPrint("I'm updating KPM Read Excel Sheet...");
+
+
+            Worksheet KPMSelection_Worksheet = g_KPMWorkbook.Worksheets["KPM_Selection"];
+
+            int nCurRow = 3;
+            for (int nIdx = 0; nIdx < ReadList.Count; nIdx++)
+            {
+                Dictionary<KPMReadInfo, List<string>> tempDic = ReadList[nIdx];
+                List<KPMReadInfo> Keys = new List<KPMReadInfo>(tempDic.Keys);
+                string sFunctionName = Keys[0].sDataType;
+
+                int nCol = FindColumn(KPMSelection_Worksheet.get_Range("1:1"), sFunctionName);
+
+                List<string> tempValueList = tempDic[Keys[0]];
+
+                int nInfoDepth = Keys[0].nDepthCnt;
+                for (int nCurDepth = 0; nCurDepth <= nInfoDepth; nCurDepth++)
+                {
+                    if (nCurDepth == nInfoDepth)
+                    {
+                        foreach (string curString in tempValueList)
+                        {
+                            ((Range)KPMSelection_Worksheet.Cells[nCurRow, nCol + nCurDepth]).Value = curString;
+                            nCurRow++;
+                        }
+                    }
+                    else
+                    {
+                        string DepthString = "";
+                        if(nCurDepth == 0)
+                        {
+                            DepthString = Keys[0].Depth1;
+                        }
+                        else if (nCurDepth == 1)
+                        {
+                            DepthString = Keys[0].Depth2;
+                        }
+                        else if (nCurDepth == 2)
+                        {
+                            DepthString = Keys[0].Depth3;
+                        }
+                        ((Range)KPMSelection_Worksheet.Cells[nCurRow, nCol + nCurDepth]).Value = DepthString;
+                    }
+                }
+            }
+
+            if (g_KPMWorkbook.ReadOnly == false)
+            {
+                g_KPMWorkbook.Save();
+            }
         }
     }
 }

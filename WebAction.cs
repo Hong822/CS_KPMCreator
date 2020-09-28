@@ -1,6 +1,8 @@
 ﻿using mshtml;
 using SHDocVw;
 using System.Windows.Forms;
+using System.Collections.Generic;
+using System.Collections;
 
 namespace CS_KPMCreator
 {
@@ -30,6 +32,16 @@ namespace CS_KPMCreator
 #endif
                 System.Threading.Thread.Sleep(nTickGap);
                 nCurTime += nTickGap;
+            }
+        }
+
+        public void TotalWait(InternetExplorer IE, HTMLDocument doc, string ID = null, string ElemType = "ID", string WaitType = "Exist", int nTimer = 5000)
+        {            
+            LoadingWait(doc, nTimer);
+            WaitPageLoading(IE, nTimer);
+            if (ID != null)
+            {
+                WaitUntilID(doc, ID, ElemType, WaitType);
             }
         }
 
@@ -124,11 +136,10 @@ namespace CS_KPMCreator
 #if (DEBUG)
             DebugPrint("[ClickButton]" + ID);
 #endif
-            WaitPageLoading(IE);
+            TotalWait(IE, doc, ID, ElemType);
 
             if (ElemType == "ID" || ElemType == null)
             {
-                WaitUntilID(doc, ID);
                 IHTMLElement SelectedElement = doc.getElementById(ID);
                 try
                 {
@@ -142,7 +153,6 @@ namespace CS_KPMCreator
             }
             else if (ElemType == "NAME")
             {
-                WaitUntilID(doc, ID, ElemType);
                 IHTMLElementCollection SelectedElement = doc.getElementsByName(ID);
 
                 foreach (IHTMLElement elem in SelectedElement)
@@ -168,7 +178,7 @@ namespace CS_KPMCreator
 #if (DEBUG)
             DebugPrint("[ExecuteJS] " + ID);
 #endif
-            WaitPageLoading(IE);
+            TotalWait(IE, doc);
             var win = (IHTMLWindow2)doc.parentWindow;
             // here you call the Javascript
 
@@ -192,8 +202,7 @@ namespace CS_KPMCreator
 #if (DEBUG)
             DebugPrint("[SetComboItem]" + ParentID + ", " + InputValue);
 #endif
-            WaitPageLoading(IE);
-            WaitUntilID(doc, ParentID);
+            TotalWait(IE, doc, ParentID);
             IHTMLElement SelectedElement = doc.getElementById(ParentID);
             try
             {
@@ -206,7 +215,7 @@ namespace CS_KPMCreator
                 return bResult;
             }
 
-            WaitUntilID(doc, ListID);
+            TotalWait(IE, doc, ListID);
             IHTMLElementCollection elemcoll = doc.getElementById(ListID).children as IHTMLElementCollection;
 
             bool bFind = false;
@@ -234,8 +243,7 @@ namespace CS_KPMCreator
                         return bResult;
                     }
 
-                    elem.setAttribute("innerText", InputValue);
-                    WaitPageLoading(IE);
+                    TotalWait(IE, doc);
                     bFind = true;
                 }
                 //System.Diagnostics.Debug.WriteLine(" ==================================================");
@@ -249,6 +257,86 @@ namespace CS_KPMCreator
             return bResult;
         }
 
+        public bool ReadComboItem(InternetExplorer IE, HTMLDocument doc,
+                        string Depth1Txt, string Depth2Txt, string Depth3Txt, string Depth4Txt,
+                        int nCurDepth, int nLastDepth,
+                        string ID, string ID2, string ID3, string ID4, string Comment,
+                        ref List<Dictionary<KPMReadInfo, List<string>>> ReadList)
+        {
+            bool bResult = true;
+
+#if (DEBUG)
+            DebugPrint("[ReadComboItem]");
+#endif
+            string[] IDAray = { ID, ID2, ID3, ID4 };
+            string[] ItemIDAray = { ID + "_items", ID2 + "_items", ID3 + "_items", ID4 + "_items" };
+
+            TotalWait(IE, doc, IDAray[nCurDepth]);
+            IHTMLElement SelectedElement = doc.getElementById(IDAray[nCurDepth]);
+            SelectedElement.click();
+
+            TotalWait(IE, doc, ItemIDAray[nCurDepth]);
+            IHTMLElementCollection elemcoll = doc.getElementById(ItemIDAray[nCurDepth]).children as IHTMLElementCollection;
+
+            Dictionary<KPMReadInfo, List<string>> LastList = null;
+            List<string> TextList = null;
+            KPMReadInfo nInfo = null;
+            int nLen = elemcoll.length;
+            foreach (IHTMLElement elem in elemcoll)
+            {
+                string ElemText = elem.innerText;
+                
+                if (nCurDepth < nLastDepth - 1)
+                {
+                    if (nCurDepth == 0)
+                        Depth1Txt = ElemText;
+                    else if (nCurDepth == 1)
+                        Depth2Txt = ElemText;
+                    else if (nCurDepth == 2)
+                        Depth3Txt = ElemText;
+                    else
+                        Depth4Txt = ElemText;
+
+                    elem.click();
+                    TotalWait(IE, doc);
+
+                    int nNextdepth = nCurDepth + 1;
+                    ReadComboItem(IE, doc,
+                        Depth1Txt, Depth2Txt, Depth3Txt, Depth4Txt,
+                        nNextdepth, nLastDepth,
+                        ID, ID2, ID3, ID4, Comment,
+                        ref ReadList);
+                }
+                else
+                {   // End. Let's add all texts.
+                    if (nInfo == null)
+                    {
+                        nInfo = new KPMReadInfo();
+                        nInfo.Depth1 = Depth1Txt; nInfo.Depth2 = Depth2Txt;
+                        nInfo.Depth3 = Depth3Txt; nInfo.Depth4 = Depth4Txt;
+                        nInfo.nDepthCnt = nCurDepth;
+                        nInfo.sDataType = Comment;
+                    }
+                    if (TextList == null)
+                    {
+                        TextList = new List<string>();
+                    }
+                    if (LastList == null)
+                    {
+                        LastList = new Dictionary<KPMReadInfo, List<string>>();
+                    }
+
+                    TextList.Add(ElemText);
+                }
+            }
+            if (LastList != null)
+            {
+                LastList.Add(nInfo, TextList);
+                ReadList.Add(LastList);
+            }
+            return bResult;
+        }
+
         public bool SetTextBox(InternetExplorer IE, HTMLDocument doc, string ID, string InputText)
         {
             bool bResult = true;
@@ -256,9 +344,7 @@ namespace CS_KPMCreator
             DebugPrint("[SetTextBox]" + ID + ", " + InputText);
 #endif
 
-            WaitPageLoading(IE);
-            WaitUntilID(doc, ID);
-
+            TotalWait(IE, doc, ID);
             IHTMLElement SelectedElement = doc.getElementById(ID);
 
             try
@@ -282,8 +368,7 @@ namespace CS_KPMCreator
             DebugPrint("[CallEvent]" + ID + ", " + EventType);
 #endif
 
-            WaitPageLoading(IE);
-            WaitUntilID(doc, ID);
+            TotalWait(IE, doc, ID);
             IHTMLElementCollection SelectedElement = doc.getElementsByName(ID);
 
             foreach (IHTMLElement3 elem in SelectedElement)
@@ -307,8 +392,7 @@ namespace CS_KPMCreator
 #if (DEBUG)
             DebugPrint("[GetText]" + ID);
 #endif
-            WaitPageLoading(IE);
-            WaitUntilID(doc, ID);
+            TotalWait(IE, doc, ID);
 
             IHTMLElement SelectedElement = doc.getElementById(ID);
 

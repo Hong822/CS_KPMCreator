@@ -49,9 +49,13 @@ namespace CS_KPMCreator
             this.rbPorsche = new System.Windows.Forms.RadioButton();
             this.rbAudi = new System.Windows.Forms.RadioButton();
             this.richTB_Status = new System.Windows.Forms.RichTextBox();
+            this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.rbKPMRead = new System.Windows.Forms.RadioButton();
+            this.rbCreation = new System.Windows.Forms.RadioButton();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.Brand.SuspendLayout();
+            this.groupBox3.SuspendLayout();
             this.SuspendLayout();
             // 
             // bExcelSelect
@@ -150,7 +154,7 @@ namespace CS_KPMCreator
             // 
             // bStartCreation
             // 
-            this.bStartCreation.Location = new System.Drawing.Point(40, 421);
+            this.bStartCreation.Location = new System.Drawing.Point(40, 484);
             this.bStartCreation.Name = "bStartCreation";
             this.bStartCreation.Size = new System.Drawing.Size(479, 56);
             this.bStartCreation.TabIndex = 4;
@@ -165,7 +169,7 @@ namespace CS_KPMCreator
             this.groupBox2.Controls.Add(this.rbIE);
             this.groupBox2.Location = new System.Drawing.Point(40, 232);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(480, 76);
+            this.groupBox2.Size = new System.Drawing.Size(480, 65);
             this.groupBox2.TabIndex = 5;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Web Browser Type";
@@ -206,9 +210,9 @@ namespace CS_KPMCreator
             // 
             this.Brand.Controls.Add(this.rbPorsche);
             this.Brand.Controls.Add(this.rbAudi);
-            this.Brand.Location = new System.Drawing.Point(40, 316);
+            this.Brand.Location = new System.Drawing.Point(40, 308);
             this.Brand.Name = "Brand";
-            this.Brand.Size = new System.Drawing.Size(479, 38);
+            this.Brand.Size = new System.Drawing.Size(479, 51);
             this.Brand.TabIndex = 6;
             this.Brand.TabStop = false;
             this.Brand.Text = "Brand";
@@ -216,7 +220,7 @@ namespace CS_KPMCreator
             // rbPorsche
             // 
             this.rbPorsche.AutoSize = true;
-            this.rbPorsche.Location = new System.Drawing.Point(226, 16);
+            this.rbPorsche.Location = new System.Drawing.Point(226, 20);
             this.rbPorsche.Name = "rbPorsche";
             this.rbPorsche.Size = new System.Drawing.Size(70, 16);
             this.rbPorsche.TabIndex = 1;
@@ -227,7 +231,7 @@ namespace CS_KPMCreator
             // 
             this.rbAudi.AutoSize = true;
             this.rbAudi.Checked = true;
-            this.rbAudi.Location = new System.Drawing.Point(18, 16);
+            this.rbAudi.Location = new System.Drawing.Point(18, 20);
             this.rbAudi.Name = "rbAudi";
             this.rbAudi.Size = new System.Drawing.Size(48, 16);
             this.rbAudi.TabIndex = 0;
@@ -237,17 +241,51 @@ namespace CS_KPMCreator
             // 
             // richTB_Status
             // 
-            this.richTB_Status.Location = new System.Drawing.Point(42, 373);
+            this.richTB_Status.Location = new System.Drawing.Point(42, 432);
             this.richTB_Status.Name = "richTB_Status";
             this.richTB_Status.Size = new System.Drawing.Size(477, 36);
             this.richTB_Status.TabIndex = 7;
             this.richTB_Status.Text = "";
             // 
+            // groupBox3
+            // 
+            this.groupBox3.Controls.Add(this.rbKPMRead);
+            this.groupBox3.Controls.Add(this.rbCreation);
+            this.groupBox3.Location = new System.Drawing.Point(40, 365);
+            this.groupBox3.Name = "groupBox3";
+            this.groupBox3.Size = new System.Drawing.Size(479, 51);
+            this.groupBox3.TabIndex = 7;
+            this.groupBox3.TabStop = false;
+            this.groupBox3.Text = "Program Action";
+            // 
+            // rbKPMRead
+            // 
+            this.rbKPMRead.AutoSize = true;
+            this.rbKPMRead.Location = new System.Drawing.Point(226, 20);
+            this.rbKPMRead.Name = "rbKPMRead";
+            this.rbKPMRead.Size = new System.Drawing.Size(83, 16);
+            this.rbKPMRead.TabIndex = 1;
+            this.rbKPMRead.Text = "KPM Read";
+            this.rbKPMRead.UseVisualStyleBackColor = true;
+            // 
+            // rbCreation
+            // 
+            this.rbCreation.AutoSize = true;
+            this.rbCreation.Checked = true;
+            this.rbCreation.Location = new System.Drawing.Point(18, 20);
+            this.rbCreation.Name = "rbCreation";
+            this.rbCreation.Size = new System.Drawing.Size(98, 16);
+            this.rbCreation.TabIndex = 0;
+            this.rbCreation.TabStop = true;
+            this.rbCreation.Text = "Ticket Create";
+            this.rbCreation.UseVisualStyleBackColor = true;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(555, 489);
+            this.ClientSize = new System.Drawing.Size(555, 552);
+            this.Controls.Add(this.groupBox3);
             this.Controls.Add(this.richTB_Status);
             this.Controls.Add(this.Brand);
             this.Controls.Add(this.groupBox2);
@@ -263,6 +301,8 @@ namespace CS_KPMCreator
             this.groupBox2.PerformLayout();
             this.Brand.ResumeLayout(false);
             this.Brand.PerformLayout();
+            this.groupBox3.ResumeLayout(false);
+            this.groupBox3.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -288,6 +328,9 @@ namespace CS_KPMCreator
         private System.Windows.Forms.RadioButton rbPorsche;
         private System.Windows.Forms.RadioButton rbAudi;
         private System.Windows.Forms.RichTextBox richTB_Status;
+        private System.Windows.Forms.GroupBox groupBox3;
+        private System.Windows.Forms.RadioButton rbKPMRead;
+        private System.Windows.Forms.RadioButton rbCreation;
     }
 }
 

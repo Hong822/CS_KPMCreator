@@ -1,5 +1,7 @@
 ﻿using mshtml;
 using SHDocVw;
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Windows.Forms;
 
@@ -25,7 +27,7 @@ namespace CS_KPMCreator
             System.Diagnostics.Debug.WriteLine(sDebugString);
         }
 
-        public void OpenWebSite(RadioButton rbB2B, RadioButton rbB2C, TextBox tB2BID, TextBox tB2BPW)
+        public void OpenWebSite(RadioButton rbB2B, RadioButton rbB2C, RadioButton rbKPMRead, TextBox tB2BID, TextBox tB2BPW)
         {
             DebugPrint("I'm accessing KPM...");
             WA.SetStatusBox(ref g_richTB_Status);
@@ -36,33 +38,27 @@ namespace CS_KPMCreator
 
             rbB2B.Checked = true;
             rbB2C.Checked = false;
-            if (rbB2C.Checked == true)
+
+            if (rbKPMRead.Checked == true || rbB2B.Checked == true)
             {
-                URL = "https://quasi.vw.vwg/kpm/kpmweb";
+                //if (sID != null && sPW != null)
+                //{
+                //    URL = "https://" + sID + ":" + sPW + "@sso.volkswagen.de/kpmweb/Index.action";
+                //}
+                //else
+                { 
+                    URL = "https://sso.volkswagen.de/kpmweb/Index.action"; 
+                }
             }
             else
             {
-                if (rbB2B.Checked == true)
-                {
-                    //if (sID != null && sPW != null)
-                    //{
-                    //    URL = "https://" + sID + ":" + sPW + "@sso.volkswagen.de/kpmweb/Index.action";
-                    //}
-                    //else
-                    {
-                        URL = "https://sso.volkswagen.de/kpmweb/Index.action";
-                    }
-                }
-                else
-                {
-                    MessageBox.Show("This case should happen.");
-                }
+                URL = "https://quasi.vw.vwg/kpm/kpmweb";
             }
 
-            if (rbB2C.Checked == true)
-            {
-                MessageBox.Show("Wait!!! Login and Go to Main page. And then press OK", "Please Login KPM");
-            }
+            //if (rbB2C.Checked == true)
+            //{
+            //    MessageBox.Show("Wait!!! Login and Go to Main page. And then press OK", "Please Login KPM");
+            //}
 
             GoToURL(URL);
         }
@@ -124,12 +120,14 @@ namespace CS_KPMCreator
         private bool CreateOneTicket(ref Dictionary<string, string> TicketItem, ref List<Dictionary<string, string>> LActionList)
         {
             bool bResult = true;
+            List<Dictionary<KPMReadInfo, List<string>>> DummyList = null;
+
             for (int nIdx = 0; nIdx < LActionList.Count; nIdx++)
             {
                 Dictionary<string, string> ActionItem = LActionList[nIdx];
                 if (ActionItem["Step"] == "CreateTicket" && ActionItem["Execute"] != "X")
                 {
-                    if (CallAction(ref TicketItem, ref ActionItem) == false)
+                    if (CallAction(ref TicketItem, ref ActionItem, ref DummyList) == false)
                     {
                         bResult = false;
                         break;
@@ -142,12 +140,14 @@ namespace CS_KPMCreator
         private bool GoToAttachmentPage(ref Dictionary<string, string> TicketItem, ref List<Dictionary<string, string>> LActionList)
         {
             bool bResult = true;
+            List<Dictionary<KPMReadInfo, List<string>>> DummyList = null;
+
             for (int nIdx = 0; nIdx < LActionList.Count; nIdx++)
             {
                 Dictionary<string, string> ActionItem = LActionList[nIdx];
                 if (ActionItem["Step"] == "GoToAttach" && ActionItem["Execute"] != "X")
                 {
-                    if (CallAction(ref TicketItem, ref ActionItem) == false)
+                    if (CallAction(ref TicketItem, ref ActionItem, ref DummyList) == false)
                     {
                         bResult = false;
                         break;
@@ -167,7 +167,9 @@ namespace CS_KPMCreator
             int nAttSize = attachments.Length;
             int nCommentSize = Comments.Length;
 
-            if(nAttSize != nCommentSize)
+            List<Dictionary<KPMReadInfo, List<string>>> DummyList = null;
+
+            if (nAttSize != nCommentSize)
             {
                 TicketItem["Re-upload Attachment"] = "Attachment/Comment Unmatching!";
                 bResult = false;
@@ -191,7 +193,8 @@ namespace CS_KPMCreator
                             nText = attachments[idx];
                         }
 
-                        if (CallAction(ref TicketItem, ref ActionItem, nText) == false)
+                        
+                        if (CallAction(ref TicketItem, ref ActionItem, ref DummyList, nText) == false)
                         {
                             bResult = false;
                             return bResult;
@@ -204,7 +207,39 @@ namespace CS_KPMCreator
             return bResult;
         }
 
-        private bool CallAction(ref Dictionary<string, string> TicketItem, ref Dictionary<string, string> ActionItem, string TxtForUpload = null)
+        public bool KPMRead(ref List<Dictionary<string, string>> LActionList, ref ExcelControl g_ExcelTool)
+        {
+            bool bResult = true;
+
+            DebugPrint("I'm reading KPM Page...");
+
+            List<Dictionary<KPMReadInfo, List<string>>> ReadList = new List<Dictionary<KPMReadInfo, List<string>>>();
+            Dictionary<string, string> dummyitem = null;
+
+            for (int nIdx = 0; nIdx < LActionList.Count; nIdx++)
+            {
+                Dictionary<string, string> ActionItem = LActionList[nIdx];
+                if (ActionItem["Step"] == "ReadKPM" && ActionItem["Execute"] != "X")
+                {
+                    if (CallAction(ref dummyitem, ref ActionItem, ref ReadList, null, ActionItem["InputString"]) == false)
+                    {
+                        bResult = false;
+                        break;
+                    }
+                    else 
+                    {
+                        if (ActionItem["ActionType"] == "READ_DROPBOX")
+                        {
+                            g_ExcelTool.UpdateKPMReadSheet(ReadList);
+                            ReadList.Clear();
+                        }
+                    }
+                }
+            }
+            return bResult;
+        }
+
+        private bool CallAction(ref Dictionary<string, string> TicketItem, ref Dictionary<string, string> ActionItem, ref List<Dictionary<KPMReadInfo, List<string>>> ReadList, string TxtForUpload = null, string Read_Input_String = "")
         {
             bool bResult = true;
 
@@ -222,7 +257,7 @@ namespace CS_KPMCreator
             {
                 string TicketKey = ActionItem["InputString"];
                 bResult = WA.SetComboItem(IE, doc, ActionItem["ID"], ActionItem["ListID"], TicketItem[TicketKey]);
-            }
+            }            
             else if (ActionItem["ActionType"] == "INPUT_TEXT")
             {
                 string TicketKey = ActionItem["InputString"];
@@ -245,8 +280,22 @@ namespace CS_KPMCreator
             {
                 bResult = WA.CallEvent(IE, doc, ActionItem["ID"], ActionItem["ListID"]);
             }
+            else if (ActionItem["ActionType"] == "READ_DROPBOX")
+            {
+                int nDepth = Convert.ToInt32(ActionItem["Depth"]);
+                bResult = WA.ReadComboItem(IE, doc, 
+                                            "", "", "", "",
+                                            0, nDepth,
+                                            ActionItem["ID"], ActionItem["ID2"], ActionItem["ID3"], ActionItem["ID4"], ActionItem["Comment"],
+                                            ref ReadList);
+            }
+            else if (ActionItem["ActionType"] == "READ_INPUT_TEXT")
+            {
+                bResult = WA.SetTextBox(IE, doc, ActionItem["ID"], Read_Input_String);
+            }
 
-            WA.LoadingWait(doc);
+
+            WA.TotalWait(IE, doc);
 
             if (ActionItem["ManualWait"] == "O")
             {
