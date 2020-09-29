@@ -327,6 +327,7 @@ namespace CS_KPMCreator
                     }
 
                     TextList.Add(ElemText);
+                    DebugPrint("\t[ReadComboItem] Text Add = (" + Depth1Txt + ")(" + Depth2Txt + ")(" + Depth3Txt + ")(" + Depth4Txt + ")-" + ElemText ); 
                 }
             }
             if (LastList != null)
