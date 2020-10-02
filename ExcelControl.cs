@@ -143,7 +143,7 @@ namespace CS_KPMCreator
             g_KPMExcelApp = new Excel.Application();
             try
             {
-                tExcelPath.Text = "E:\\VS_Project\\repos\\Hong822\\CS_KPMCreator\\KPM_Ticket_Creator_V1.xlsm";
+                //tExcelPath.Text = "E:\\VS_Project\\repos\\Hong822\\CS_KPMCreator\\KPM_Ticket_Creator_V1.xlsm";
                 g_KPMWorkbook = g_KPMExcelApp.Workbooks.Open(tExcelPath.Text);
                 if (g_KPMWorkbook.ReadOnly == true && rbKPMRead.Checked == false)
                 {
@@ -159,7 +159,7 @@ namespace CS_KPMCreator
                 return false;
             }
 
-            g_KPMCreate_Worksheet = g_KPMWorkbook.Worksheets["kpmcreate"];
+            g_KPMCreate_Worksheet = g_KPMWorkbook.Worksheets["KPM_Create"];
             g_KPMExcelApp.Visible = true;
             //g_KPMExcelApp.Visible = false;
 
@@ -184,9 +184,9 @@ namespace CS_KPMCreator
             Excel.Workbook ActionWB = null;
             Excel.Worksheet ActionWS = null;
 
-            string ActionExcelPath = "E:\\VS_Project\\repos\\Hong822\\CS_KPMCreator\\KPM_Action_Description.xlsm";
+            string ActionExcelPath = "C:\\KPM_Creator\\KPM_Action_Description.xlsm";
+            //string ActionExcelPath = "E:\\VS_Project\\repos\\Hong822\\CS_KPMCreator\\KPM_Action_Description.xlsm";
             //string ActionExcelPath = "D:\\25_C_Projects\\Repos\\Hong822\\CS_KPMCreator\\KPM_Action_Description.xlsm";
-
             try
             {
                 ActionWB = ActionApp.Workbooks.Open(ActionExcelPath);
@@ -198,9 +198,10 @@ namespace CS_KPMCreator
                 return false;
             }
 
+            string ActionSheet = "";
             if (rbKPMRead.Checked == true)
             {
-                ActionWS = ActionWB.Worksheets["KPMRead"];
+                ActionSheet = "KPMRead";
             }
             else
             {
@@ -208,25 +209,28 @@ namespace CS_KPMCreator
                 {
                     if (rbB2B.Checked == true)
                     {
-                        ActionWS = ActionWB.Worksheets["PO_B2B"];
+                        ActionSheet = "PO_B2B";
                     }
                     else
                     {
-                        ActionWS = ActionWB.Worksheets["PO_B2C"];
+                        ActionSheet = "PO_B2C";
                     }
                 }
                 else    // Audi
                 {
                     if (rbB2B.Checked == true)
                     {
-                        ActionWS = ActionWB.Worksheets["AU_B2B"];
+                        ActionSheet = "AU_B2B";
                     }
                     else
                     {
-                        ActionWS = ActionWB.Worksheets["AU_B2C"];
+                        ActionSheet = "AU_B2C";
                     }
                 }
             }
+
+            ActionWS = ActionWB.Worksheets[ActionSheet];
+            DebugPrint("I'm reading Action Excel File...\t" + ActionSheet);
 
             ActionApp.Visible = false;
             //ActionApp.Visible = true;
@@ -311,7 +315,7 @@ namespace CS_KPMCreator
                     else
                     {
                         string DepthString = "";
-                        if(nCurDepth == 0)
+                        if (nCurDepth == 0)
                         {
                             DepthString = Keys[0].Depth1;
                         }

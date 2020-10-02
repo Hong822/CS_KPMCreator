@@ -23,6 +23,7 @@ namespace CS_KPMCreator
 
         public void ManualWait(int nTimer = 5000)
         {
+            return;
             int nCurTime = 0;
             int nTickGap = 1000;
             while (nCurTime < nTimer)

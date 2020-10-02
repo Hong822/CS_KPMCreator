@@ -36,8 +36,8 @@ namespace CS_KPMCreator
             webBrowser = (IWebBrowserApp)IE;
             object URL = null;
 
-            rbB2B.Checked = true;
-            rbB2C.Checked = false;
+            //rbB2B.Checked = true;
+            //rbB2C.Checked = false;
 
             if (rbKPMRead.Checked == true || rbB2B.Checked == true)
             {

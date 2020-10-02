@@ -83,12 +83,10 @@ namespace CS_KPMCreator
             // rbB2B
             // 
             this.rbB2B.AutoSize = true;
-            this.rbB2B.Checked = true;
-            this.rbB2B.Location = new System.Drawing.Point(17, 30);
+            this.rbB2B.Location = new System.Drawing.Point(17, 61);
             this.rbB2B.Name = "rbB2B";
             this.rbB2B.Size = new System.Drawing.Size(45, 16);
             this.rbB2B.TabIndex = 2;
-            this.rbB2B.TabStop = true;
             this.rbB2B.Text = "B2B";
             this.rbB2B.UseVisualStyleBackColor = true;
             // 
@@ -109,7 +107,7 @@ namespace CS_KPMCreator
             // 
             // textBox2
             // 
-            this.textBox2.Location = new System.Drawing.Point(86, 29);
+            this.textBox2.Location = new System.Drawing.Point(86, 56);
             this.textBox2.Name = "textBox2";
             this.textBox2.ReadOnly = true;
             this.textBox2.Size = new System.Drawing.Size(31, 21);
@@ -118,7 +116,7 @@ namespace CS_KPMCreator
             // 
             // textBox3
             // 
-            this.textBox3.Location = new System.Drawing.Point(292, 29);
+            this.textBox3.Location = new System.Drawing.Point(292, 56);
             this.textBox3.Name = "textBox3";
             this.textBox3.ReadOnly = true;
             this.textBox3.Size = new System.Drawing.Size(31, 21);
@@ -127,7 +125,7 @@ namespace CS_KPMCreator
             // 
             // tB2BPW
             // 
-            this.tB2BPW.Location = new System.Drawing.Point(329, 29);
+            this.tB2BPW.Location = new System.Drawing.Point(329, 56);
             this.tB2BPW.Name = "tB2BPW";
             this.tB2BPW.PasswordChar = '*';
             this.tB2BPW.Size = new System.Drawing.Size(128, 21);
@@ -136,7 +134,7 @@ namespace CS_KPMCreator
             // 
             // tB2BID
             // 
-            this.tB2BID.Location = new System.Drawing.Point(123, 29);
+            this.tB2BID.Location = new System.Drawing.Point(123, 56);
             this.tB2BID.Name = "tB2BID";
             this.tB2BID.Size = new System.Drawing.Size(154, 21);
             this.tB2BID.TabIndex = 4;
@@ -145,10 +143,12 @@ namespace CS_KPMCreator
             // rbB2C
             // 
             this.rbB2C.AutoSize = true;
-            this.rbB2C.Location = new System.Drawing.Point(17, 66);
+            this.rbB2C.Checked = true;
+            this.rbB2C.Location = new System.Drawing.Point(16, 30);
             this.rbB2C.Name = "rbB2C";
             this.rbB2C.Size = new System.Drawing.Size(46, 16);
             this.rbB2C.TabIndex = 3;
+            this.rbB2C.TabStop = true;
             this.rbB2C.Text = "B2C";
             this.rbB2C.UseVisualStyleBackColor = true;
             // 
@@ -274,10 +274,10 @@ namespace CS_KPMCreator
             this.rbCreation.Checked = true;
             this.rbCreation.Location = new System.Drawing.Point(18, 20);
             this.rbCreation.Name = "rbCreation";
-            this.rbCreation.Size = new System.Drawing.Size(98, 16);
+            this.rbCreation.Size = new System.Drawing.Size(108, 16);
             this.rbCreation.TabIndex = 0;
             this.rbCreation.TabStop = true;
-            this.rbCreation.Text = "Ticket Create";
+            this.rbCreation.Text = "Ticket Creation";
             this.rbCreation.UseVisualStyleBackColor = true;
             // 
             // Form1
