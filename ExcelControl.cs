@@ -1,7 +1,7 @@
 ﻿using Microsoft.Office.Interop.Excel;
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Diagnostics;
 using System.Windows.Forms;
 
 using Excel = Microsoft.Office.Interop.Excel;
@@ -10,43 +10,22 @@ namespace CS_KPMCreator
 {
     internal class ExcelControl
     {
-        private RichTextBox g_richTB_Status = null;
+        private Util g_Util = null;
         private Excel.Application g_KPMExcelApp = null;
         private Excel.Workbook g_KPMWorkbook = null;
         private Excel.Worksheet g_KPMCreate_Worksheet = null;
 
-        public void SetStatusBox(ref RichTextBox richTB_Status)
+        public ExcelControl(ref Util util)
         {
-            g_richTB_Status = richTB_Status;
+            g_Util = util;
         }
 
-        public void CloseExcelControl()
+        public void CloseExcelControl(ref List<Process> processes)
         {
-            if (g_KPMCreate_Worksheet != null)
-            {
-                System.Runtime.InteropServices.Marshal.ReleaseComObject(g_KPMCreate_Worksheet);
-            }
-            if (g_KPMWorkbook != null)
-            {
-                DebugPrint("I'm saving Excel File...");
-                if (g_KPMWorkbook.ReadOnly == false)
-                {
-                    g_KPMWorkbook.Save();
-                }
-                g_KPMWorkbook.Close();
-                System.Runtime.InteropServices.Marshal.ReleaseComObject(g_KPMWorkbook);
-                g_KPMWorkbook = null;
-            }
-            if (g_KPMExcelApp != null)
-            {
-                DebugPrint("I'm closing Excel File...");
-                g_KPMExcelApp.Quit();
-                System.Runtime.InteropServices.Marshal.ReleaseComObject(g_KPMExcelApp);
-                g_KPMExcelApp = null;
-            }
+            CloseExcelControl(ref g_KPMCreate_Worksheet, ref g_KPMWorkbook, ref g_KPMExcelApp, ref processes);
         }
 
-        public void CloseExcelControl(ref Excel.Worksheet ws, ref Excel.Workbook wb, ref Excel.Application app)
+        public void CloseExcelControl(ref Excel.Worksheet ws, ref Excel.Workbook wb, ref Excel.Application app, ref List<Process> processes)
         {
             if (ws != null)
             {
@@ -54,7 +33,7 @@ namespace CS_KPMCreator
             }
             if (wb != null)
             {
-                DebugPrint("I'm saving Excel File...");
+                g_Util.DebugPrint("I'm saving Excel File...");
                 if (wb.ReadOnly == false)
                 {
                     wb.Save();
@@ -65,17 +44,51 @@ namespace CS_KPMCreator
             }
             if (app != null)
             {
-                DebugPrint("I'm closing Excel File...");
+                g_Util.DebugPrint("I'm closing Excel File...");
                 app.Quit();
                 System.Runtime.InteropServices.Marshal.ReleaseComObject(app);
                 app = null;
             }
+
+            if (processes != null && processes.Count > 0)
+            {
+                g_Util.DebugPrint("I'm killing Excel processes...");
+                foreach (Process Iter in processes)
+                {
+                    if (Iter.ProcessName == "EXCEL")
+                    {
+                        try
+                        {
+                            Process.GetProcessById(Iter.Id);
+                            Iter.Kill();
+                        }
+                        catch
+                        {
+                            continue;
+                        }
+                    }
+                }
+            }
         }
 
-        public void DebugPrint(string sDebugString)
+        public void FindNewProcess(Process[] processesBefore, Process[] processesAfter, ref List<Process> processes)
         {
-            g_richTB_Status.Text = sDebugString;
-            System.Diagnostics.Debug.WriteLine(sDebugString);
+            foreach (Process AfterIter in processesAfter)
+            {
+                bool bFind = false;
+                foreach (Process BeforeIter in processesBefore)
+                {
+                    if (AfterIter.Id == BeforeIter.Id)
+                    {
+                        bFind = true;
+                        break;
+                    }
+                }
+                if (bFind == false)
+                {
+                    processes.Add(AfterIter);
+                }
+            }
         }
 
         private int FindColumn(Range rRow, string ColName)
@@ -135,27 +148,35 @@ namespace CS_KPMCreator
             }
         }
 
-        public bool ReadExcelValue(System.Windows.Forms.TextBox tExcelPath, RadioButton rbB2B, RadioButton rbB2C, RadioButton rbAudi, RadioButton rbPorsche, RadioButton rbKPMRead, ref List<Dictionary<string, string>> LTicketItemList, ref List<Dictionary<string, string>> LActionList)
+        public bool ReadExcelValue(System.Windows.Forms.TextBox tExcelPath, RadioButton rbB2B, RadioButton rbB2C, RadioButton rbAudi, RadioButton rbPorsche, RadioButton rbKPMRead, RadioButton rbTKCancel, ref List<Dictionary<string, string>> LTicketItemList, ref List<Dictionary<string, string>> LActionList, ref List<Process> processes)
         {
-            DebugPrint("I'm reading KPM Excel File...");
+            g_Util.DebugPrint("I'm reading KPM Excel File...");
+
+            Process[] processesBefore = Process.GetProcessesByName("EXCEL");
 
             // ***Setting KPM Items***
             g_KPMExcelApp = new Excel.Application();
             try
             {
                 //tExcelPath.Text = "E:\\VS_Project\\repos\\Hong822\\CS_KPMCreator\\KPM_Ticket_Creator_V1.xlsm";
+                //tExcelPath.Text = "D:\\25_C_Projects\\Repos\\Hong822\\CS_KPMCreator\\KPM_Ticket_Creator_V1.xlsm";
+
                 g_KPMWorkbook = g_KPMExcelApp.Workbooks.Open(tExcelPath.Text);
+
+                Process[] processesAfter = Process.GetProcessesByName("EXCEL");
+                FindNewProcess(processesBefore, processesAfter, ref processes);
+
                 if (g_KPMWorkbook.ReadOnly == true && rbKPMRead.Checked == false)
                 {
-                    DebugPrint("Please Close KPM Excel File and Open with Write Autority...");
-                    CloseExcelControl(ref g_KPMCreate_Worksheet, ref g_KPMWorkbook, ref g_KPMExcelApp);
+                    g_Util.DebugPrint("Please Close KPM Excel File and Open with Write Autority...");
+                    CloseExcelControl(ref g_KPMCreate_Worksheet, ref g_KPMWorkbook, ref g_KPMExcelApp, ref processes);
                     return false;
                 }
             }
             catch
             {
-                DebugPrint("Please Select Excel Path.");
-                CloseExcelControl(ref g_KPMCreate_Worksheet, ref g_KPMWorkbook, ref g_KPMExcelApp);
+                g_Util.DebugPrint("Please Select Excel Path.");
+                CloseExcelControl(ref g_KPMCreate_Worksheet, ref g_KPMWorkbook, ref g_KPMExcelApp, ref processes);
                 return false;
             }
 
@@ -169,7 +190,7 @@ namespace CS_KPMCreator
             //int STCol = FindColumn(g_KPMCreate_Worksheet.get_Range("1:1"), "Short Text");
             //string tempRange = STCol + ":" + STCol;
             //nEndRow = LastRowPerColumn(g_KPMCreate_Worksheet.get_Range(tempRange));
-            nEndRow = LastRowPerColumn(g_KPMCreate_Worksheet.get_Range("K:K"));
+            nEndRow = LastRowPerColumn(g_KPMCreate_Worksheet.get_Range("H:H"));
 
             nStartCol = 1;
             nEndCol = LastColumnPerRow(g_KPMCreate_Worksheet.get_Range("1:1"));
@@ -178,23 +199,29 @@ namespace CS_KPMCreator
             FillDictionary(LTicketItemList, g_KPMCreate_Worksheet, nStartRow, nEndRow, nStartCol, nEndCol);
 
             // ***Setting Actions***
-            DebugPrint("I'm reading Action Excel File...");
+            g_Util.DebugPrint("I'm reading Action Excel File...");
 
             Excel.Application ActionApp = new Excel.Application();
             Excel.Workbook ActionWB = null;
             Excel.Worksheet ActionWS = null;
 
-            string ActionExcelPath = "C:\\KPM_Creator\\KPM_Action_Description.xlsm";
+            var Dir = System.IO.Directory.GetCurrentDirectory();
+            //Dir = Dir.Substring(0, Dir.LastIndexOf("\\"));
+
+            string ActionExcelPath = Dir + "\\KPM_Action_Description.xlsm";
             //string ActionExcelPath = "E:\\VS_Project\\repos\\Hong822\\CS_KPMCreator\\KPM_Action_Description.xlsm";
-            //string ActionExcelPath = "D:\\25_C_Projects\\Repos\\Hong822\\CS_KPMCreator\\KPM_Action_Description.xlsm";
+            //ActionExcelPath = "D:\\25_C_Projects\\Repos\\Hong822\\CS_KPMCreator\\KPM_Action_Description.xlsm";
+
             try
             {
                 ActionWB = ActionApp.Workbooks.Open(ActionExcelPath);
+                Process[] processesAfter = Process.GetProcessesByName("EXCEL");
+                FindNewProcess(processesBefore, processesAfter, ref processes);
             }
             catch
             {
-                DebugPrint("Please check " + ActionExcelPath + ".");
-                CloseExcelControl(ref ActionWS, ref ActionWB, ref ActionApp);
+                g_Util.DebugPrint("Please check " + ActionExcelPath + ".");
+                CloseExcelControl(ref ActionWS, ref ActionWB, ref ActionApp, ref processes);
                 return false;
             }
 
@@ -202,6 +229,10 @@ namespace CS_KPMCreator
             if (rbKPMRead.Checked == true)
             {
                 ActionSheet = "KPMRead";
+            }
+            else if (rbTKCancel.Checked == true)
+            {
+                ActionSheet = "KPMDelete";
             }
             else
             {
@@ -230,7 +261,7 @@ namespace CS_KPMCreator
             }
 
             ActionWS = ActionWB.Worksheets[ActionSheet];
-            DebugPrint("I'm reading Action Excel File...\t" + ActionSheet);
+            g_Util.DebugPrint("I'm reading Action Excel File...\t" + ActionSheet);
 
             ActionApp.Visible = false;
             //ActionApp.Visible = true;
@@ -247,7 +278,8 @@ namespace CS_KPMCreator
 
             if (ActionApp.Visible == false)
             {
-                CloseExcelControl(ref ActionWS, ref ActionWB, ref ActionApp);
+                List<Process> dummyList = null;
+                CloseExcelControl(ref ActionWS, ref ActionWB, ref ActionApp, ref dummyList);
             }
             else
             {
@@ -259,7 +291,7 @@ namespace CS_KPMCreator
 
         public void UpdateKPMDocument(List<Dictionary<string, string>> LTicketItemList)
         {
-            DebugPrint("I'm updating Excel File...");
+            g_Util.DebugPrint("I'm updating Excel File...");
 
             int nNumberCol = FindColumn(g_KPMCreate_Worksheet.get_Range("1:1"), "Number");
             int nUploadCol = FindColumn(g_KPMCreate_Worksheet.get_Range("1:1"), "Re-upload Attachment");
@@ -276,7 +308,7 @@ namespace CS_KPMCreator
                 nCurKPMSheetRow++;
             }
 
-            DebugPrint("I'm saving Excel File...");
+            g_Util.DebugPrint("I'm saving Excel File...");
             if (g_KPMWorkbook.ReadOnly == false)
             {
                 g_KPMWorkbook.Save();
@@ -285,8 +317,7 @@ namespace CS_KPMCreator
 
         public void UpdateKPMReadSheet(List<Dictionary<KPMReadInfo, List<string>>> ReadList)
         {
-            DebugPrint("I'm updating KPM Read Excel Sheet...");
-
+            g_Util.DebugPrint("I'm updating KPM Read Excel Sheet...");
 
             Worksheet KPMSelection_Worksheet = g_KPMWorkbook.Worksheets["KPM_Selection"];
 

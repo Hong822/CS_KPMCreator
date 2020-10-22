@@ -1,5 +1,6 @@
-﻿using mshtml;
-using SHDocVw;
+﻿using OpenQA.Selenium;
+using OpenQA.Selenium.Firefox;
+using OpenQA.Selenium.Support.UI;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -7,15 +8,13 @@ using System.Windows.Forms;
 
 namespace CS_KPMCreator
 {
-    internal class WebControl_SHDoc
+    internal class WebControl_Selenium
     {
         private Util g_Util = null;
-        private InternetExplorer IE = null;
-        private IWebBrowserApp webBrowser = null;
-        private HTMLDocument doc = null;
+        private IWebDriver FF_driver = null;
         private WebAction WA = null;
 
-        public WebControl_SHDoc(ref Util util)
+        public WebControl_Selenium(ref Util util)
         {
             g_Util = util;
             WA = new WebAction(ref g_Util);
@@ -45,26 +44,32 @@ namespace CS_KPMCreator
         {
             g_Util.DebugPrint("I'm accessing KPM...");
 
-            Process[] processesBefore = Process.GetProcessesByName("iexplore");
+            Process[] processesBefore = Process.GetProcessesByName("geckodriver");
 
-            IE = new InternetExplorer();
-            webBrowser = (IWebBrowserApp)IE;
+            //var Dir = System.IO.Directory.GetCurrentDirectory();
+            //FirefoxDriverService FF_driverSerivce = FirefoxDriverService.CreateDefaultService("C:\\KPM_Creator\\WebDriver");
+            FirefoxDriverService FF_driverSerivce = FirefoxDriverService.CreateDefaultService();
+            FF_driverSerivce.HideCommandPromptWindow = true;
+            FirefoxOptions FF_options = new FirefoxOptions();
+            FF_driver = new FirefoxDriver(FF_driverSerivce, FF_options);
+            //WA.wait = new WebDriverWait(FF_driver, TimeSpan.FromMinutes(1));
+            WA.wait = new WebDriverWait(FF_driver, TimeSpan.FromMilliseconds(100));
 
-            Process[] processesAfter = Process.GetProcessesByName("iexplore");
+            Process[] processesAfter = Process.GetProcessesByName("geckodriver");
             FindNewProcess(processesBefore, processesAfter, ref processes);
 
-            object URL = null;
+            string URL = "";
 
             //rbB2B.Checked = true;
             //rbB2C.Checked = false;
 
             if (rbKPMRead.Checked == true || rbB2B.Checked == true)
             {
-                //if (sID != null && sPW != null)
-                //{
-                //    URL = "https://" + sID + ":" + sPW + "@sso.volkswagen.de/kpmweb/Index.action";
-                //}
-                //else
+                if (tB2BID.Text != null && tB2BPW.Text != null)
+                {
+                    URL = "https://" + tB2BID.Text + ":" + tB2BPW.Text + "@sso.volkswagen.de/kpmweb/Index.action";
+                }
+                else
                 {
                     URL = "https://sso.volkswagen.de/kpmweb/Index.action";
                 }
@@ -74,34 +79,41 @@ namespace CS_KPMCreator
                 URL = "https://quasi.vw.vwg/kpm/kpmweb/Index.action";
             }
 
-            //if (rbB2C.Checked == true)
-            //{
-            //    MessageBox.Show("Wait!!! Login and Go to Main page. And then press OK", "Please Login KPM");
-            //}
-
             GoToURL(URL, rbB2C);
         }
 
-        public void GoToURL(object URL, RadioButton rbB2C = null)
+        public void GoToURL(string URL, RadioButton rbB2C = null)
         {
-            IE.Visible = true;
-            IE.Navigate2(ref URL);
-
-            //if (rbB2C != null && rbB2C.Checked == true)
-            //{
-            //    MessageBox.Show("Wait!!! Login and Go to Main page. And then press OK", "Please Login KPM");
-            //}
-
-            WA.WaitPageLoading(IE);
-            doc = (HTMLDocument)IE.Document;
+            FF_driver.Navigate().GoToUrl(URL);
+            WA.TotalWait(FF_driver);
         }
 
-        public bool GoToMainPage(Dictionary<string, string> Item)
+        public bool GoToMainPage(ref List<Dictionary<string, string>> TicketItemList, ref List<Dictionary<string, string>> LActionList)
         {
-            //IHTMLElement SelectedElement = doc.getElementById(ID);
-            //if ()
-            string ID = Item["ID"];
-            return WA.ClickButton(IE, doc, ID);
+            g_Util.DebugPrint("Please Login KPM... ");
+            bool bResult = true;
+
+            string ID = LActionList[0]["ID"];
+            string SearchType = LActionList[0]["SearchType"];
+            WA.TotalWait(FF_driver, ID, SearchType, "Exist", 600000);    // Wait for 10 min to Login.
+            WA.ManualWait(5000);
+
+            Dictionary<string, string> TicketItem = TicketItemList[0];
+            List<Dictionary<KPMReadInfo, List<string>>> DummyList = null;
+
+            for (int nIdx = 0; nIdx < LActionList.Count; nIdx++)
+            {
+                Dictionary<string, string> ActionItem = LActionList[nIdx];
+                if (ActionItem["Step"] == "StartEvent")
+                {
+                    if (CallAction(ref TicketItem, ref ActionItem, ref DummyList) == false)
+                    {
+                        bResult = false;
+                        break;
+                    }
+                }
+            }
+            return bResult;
         }
 
         public bool CreateTickets(ref List<Dictionary<string, string>> TicketItemList, ref List<Dictionary<string, string>> LActionList)
@@ -208,7 +220,7 @@ namespace CS_KPMCreator
 
             if (nAttSize != nCommentSize)
             {
-                TicketItem["Re-upload Attachment"] = "Attachment/Comment mismatching!";
+                TicketItem["Re-upload Attachment"] = "Attachment/Comment Unmatching!";
                 bResult = false;
                 return bResult;
             }
@@ -275,40 +287,6 @@ namespace CS_KPMCreator
             return bResult;
         }
 
-        public bool Delete(ref List<Dictionary<string, string>> TicketItemList, ref List<Dictionary<string, string>> LActionList, ref ExcelControl g_ExcelTool)
-        {
-            bool bResult = true;
-
-            g_Util.DebugPrint("I'm Delete KPM Ticket...");
-
-            List<Dictionary<KPMReadInfo, List<string>>> dummy = null;
-
-            //Access each ticket items
-            for (int nIdx = 0; nIdx < TicketItemList.Count; nIdx++)
-            //for (int nIdx = 0; nIdx < 1; nIdx++)
-            {
-                Dictionary<string, string> dTItem = TicketItemList[nIdx];
-
-                for (int nAIdx = 0; nAIdx < LActionList.Count; nAIdx++)
-                {
-                    Dictionary<string, string> dAItem = LActionList[nAIdx];
-                    if (dAItem["Step"] == "ReadKPM" && dAItem["Execute"] != "X")
-                    {
-                        if (CallAction(ref dTItem, ref dAItem, ref dummy, null, dAItem["InputString"]) == false)
-                        {
-                            bResult = false;
-                            break;
-                        }
-                        else
-                        {
-                            ;
-                        }
-                    }
-                }
-            }
-            return bResult;
-        }
-
         private bool CallAction(ref Dictionary<string, string> TicketItem, ref Dictionary<string, string> ActionItem, ref List<Dictionary<KPMReadInfo, List<string>>> ReadList, string TxtForUpload = null, string Read_Input_String = "")
         {
             bool bResult = true;
@@ -317,58 +295,68 @@ namespace CS_KPMCreator
 
             if (ActionItem["ActionType"] == "CLICK")
             {
-                bResult = WA.ClickButton(IE, doc, ActionItem["ID"], ActionItem["SearchType"]);
+                bResult = WA.ClickButton(FF_driver, ActionItem["ID"], ActionItem["SearchType"]);
             }
             else if (ActionItem["ActionType"] == "JAVASCRIPT")
             {
-                bResult = WA.ExecuteJS(IE, doc, ActionItem["ID"]);
+                bResult = WA.ExecuteJS(FF_driver, ActionItem["ID"]);
             }
             else if (ActionItem["ActionType"] == "DROPBOX")
             {
                 string TicketKey = ActionItem["InputString"];
-                bResult = WA.SetComboItem(IE, doc, ActionItem["ID"], ActionItem["ListID"], TicketItem[TicketKey]);
+                bResult = WA.SetComboItem(FF_driver, ActionItem["ID"], ActionItem["ListID"], TicketItem[TicketKey]);
+            }
+            else if (ActionItem["ActionType"] == "DROPBOX_BYSELECT")
+            {
+                string TicketKey = ActionItem["InputString"];
+                bResult = WA.SetComboItemBySelect(FF_driver, ActionItem["ID"], TicketItem[TicketKey]);
             }
             else if (ActionItem["ActionType"] == "INPUT_TEXT")
             {
                 string TicketKey = ActionItem["InputString"];
-                bResult = WA.SetTextBox(IE, doc, ActionItem["ID"], TicketItem[TicketKey]);
+                bResult = WA.SetTextBox(FF_driver, ActionItem["ID"], TicketItem[TicketKey]);
             }
             else if (ActionItem["ActionType"] == "COPY_NUM")
             {
-                TicketItem["Number"] = WA.GetText(IE, doc, ActionItem["ID"]);
+                TicketItem["Number"] = WA.GetText(FF_driver, ActionItem["ID"]);
             }
             else if (ActionItem["ActionType"] == "GOTOURL")
             {
-                object URL = ActionItem["ID"] + TicketItem["Number"];
+                // if B2C
+                string URL = ActionItem["ID"] + TicketItem["Number"] + "&oid=";
                 GoToURL(URL);
             }
             else if (ActionItem["ActionType"] == "INPUT_UPLOAD")
             {
-                bResult = WA.SetTextBox(IE, doc, ActionItem["ID"], TxtForUpload);
+                bResult = WA.SetTextBox(FF_driver, ActionItem["ID"], TxtForUpload);
             }
             else if (ActionItem["ActionType"] == "CALLEVENT")
             {
-                bResult = WA.CallEvent(IE, doc, ActionItem["ID"], ActionItem["ListID"]);
+                bResult = WA.CallEvent(FF_driver, ActionItem["ID"], ActionItem["ListID"]);
             }
             else if (ActionItem["ActionType"] == "READ_DROPBOX")
             {
-                int nDepth = Convert.ToInt32(ActionItem["Depth"]);
-                bResult = WA.ReadComboItem(IE, doc,
-                                            "", "", "", "",
-                                            0, nDepth,
-                                            ActionItem["ID"], ActionItem["ID2"], ActionItem["ID3"], ActionItem["ID4"], ActionItem["Comment"],
-                                            ref ReadList);
+                //int nDepth = Convert.ToInt32(ActionItem["Depth"]);
+                //bResult = WA.ReadComboItem(IE, doc,
+                //                            "", "", "", "",
+                //                            0, nDepth,
+                //                            ActionItem["ID"], ActionItem["ID2"], ActionItem["ID3"], ActionItem["ID4"], ActionItem["Comment"],
+                //                            ref ReadList);
             }
             else if (ActionItem["ActionType"] == "READ_INPUT_TEXT")
             {
-                bResult = WA.SetTextBox(IE, doc, ActionItem["ID"], Read_Input_String);
+                //bResult = WA.SetTextBox(IE, doc, ActionItem["ID"], Read_Input_String);
             }
 
-            WA.TotalWait(IE, doc);
+            WA.TotalWait(FF_driver);
 
             if (ActionItem["ManualWait"] == "O")
             {
-                WA.ManualWait(500);
+                WA.ManualWait(Int32.Parse(ActionItem["WaitTime"]));
+            }
+            else 
+            {
+                WA.ManualWait();
             }
 
             return bResult;

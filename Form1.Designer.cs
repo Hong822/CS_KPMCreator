@@ -52,6 +52,7 @@ namespace CS_KPMCreator
             this.groupBox3 = new System.Windows.Forms.GroupBox();
             this.rbKPMRead = new System.Windows.Forms.RadioButton();
             this.rbCreation = new System.Windows.Forms.RadioButton();
+            this.rbTKCancel = new System.Windows.Forms.RadioButton();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.Brand.SuspendLayout();
@@ -187,23 +188,23 @@ namespace CS_KPMCreator
             // rbFirefox
             // 
             this.rbFirefox.AutoSize = true;
-            this.rbFirefox.Location = new System.Drawing.Point(275, 33);
+            this.rbFirefox.Checked = true;
+            this.rbFirefox.Location = new System.Drawing.Point(18, 33);
             this.rbFirefox.Name = "rbFirefox";
             this.rbFirefox.Size = new System.Drawing.Size(61, 16);
             this.rbFirefox.TabIndex = 1;
+            this.rbFirefox.TabStop = true;
             this.rbFirefox.Text = "Firefox";
             this.rbFirefox.UseVisualStyleBackColor = true;
             // 
             // rbIE
             // 
             this.rbIE.AutoSize = true;
-            this.rbIE.Checked = true;
-            this.rbIE.Location = new System.Drawing.Point(18, 33);
+            this.rbIE.Location = new System.Drawing.Point(194, 33);
             this.rbIE.Name = "rbIE";
-            this.rbIE.Size = new System.Drawing.Size(211, 16);
+            this.rbIE.Size = new System.Drawing.Size(115, 16);
             this.rbIE.TabIndex = 0;
-            this.rbIE.TabStop = true;
-            this.rbIE.Text = "Internet Explorer(Recommended)";
+            this.rbIE.Text = "Internet Explorer";
             this.rbIE.UseVisualStyleBackColor = true;
             // 
             // Brand
@@ -249,6 +250,7 @@ namespace CS_KPMCreator
             // 
             // groupBox3
             // 
+            this.groupBox3.Controls.Add(this.rbTKCancel);
             this.groupBox3.Controls.Add(this.rbKPMRead);
             this.groupBox3.Controls.Add(this.rbCreation);
             this.groupBox3.Location = new System.Drawing.Point(40, 365);
@@ -261,7 +263,7 @@ namespace CS_KPMCreator
             // rbKPMRead
             // 
             this.rbKPMRead.AutoSize = true;
-            this.rbKPMRead.Location = new System.Drawing.Point(226, 20);
+            this.rbKPMRead.Location = new System.Drawing.Point(213, 20);
             this.rbKPMRead.Name = "rbKPMRead";
             this.rbKPMRead.Size = new System.Drawing.Size(83, 16);
             this.rbKPMRead.TabIndex = 1;
@@ -279,6 +281,16 @@ namespace CS_KPMCreator
             this.rbCreation.TabStop = true;
             this.rbCreation.Text = "Ticket Creation";
             this.rbCreation.UseVisualStyleBackColor = true;
+            // 
+            // rbTKCancel
+            // 
+            this.rbTKCancel.AutoSize = true;
+            this.rbTKCancel.Location = new System.Drawing.Point(370, 20);
+            this.rbTKCancel.Name = "rbTKCancel";
+            this.rbTKCancel.Size = new System.Drawing.Size(101, 16);
+            this.rbTKCancel.TabIndex = 2;
+            this.rbTKCancel.Text = "Ticket Cancel";
+            this.rbTKCancel.UseVisualStyleBackColor = true;
             // 
             // Form1
             // 
@@ -331,6 +343,7 @@ namespace CS_KPMCreator
         private System.Windows.Forms.GroupBox groupBox3;
         private System.Windows.Forms.RadioButton rbKPMRead;
         private System.Windows.Forms.RadioButton rbCreation;
+        private System.Windows.Forms.RadioButton rbTKCancel;
     }
 }
 

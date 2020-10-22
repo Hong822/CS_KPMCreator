@@ -1,20 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
+using System.ComponentModel;
+using System.Diagnostics;
 using System.Windows.Forms;
 
 namespace CS_KPMCreator
 {
     public partial class Form1 : Form
     {
-        private ExcelControl g_ExcelTool = new ExcelControl();
-        private WebControl_SHDoc g_WebControl = null;
+        private Util g_Util = null;
+        private ExcelControl g_ExcelTool = null;
+        private WebControl_SHDoc g_WebControl_SHDOC = null;
+        private WebControl_Selenium g_WebControl_Selenium = null;
+        private List<Process> processes = new List<Process>();
 
         public Form1()
         {
             InitializeComponent();
             this.FormClosing += Form1_FormClosing;
-            g_ExcelTool.SetStatusBox(ref richTB_Status);
+            this.Load += Form1_FormLoading;
+            g_Util = new Util(ref richTB_Status);
         }
 
         private void bExcelSelect_Click(object sender, EventArgs e)
@@ -36,82 +41,159 @@ namespace CS_KPMCreator
 
         private void bStartCreation_Click(object sender, EventArgs e)
         {
-            List<Dictionary<string, string>> LTicketItemList = new List<Dictionary<string, string>>();
-            List<Dictionary<string, string>> LActionList = new List<Dictionary<string, string>>();
-
-            var nStartTick = DateTime.Now;
-
-            bool bExcelReadResult = true;
-            bool bCreateResult = false;
-            int tryCnt = 0;
-            if (g_ExcelTool.ReadExcelValue(tExcelPath, rbB2B, rbB2C, rbAudi, rbPorsche, rbKPMRead, ref LTicketItemList, ref LActionList) == true)   // Data read from Excel Files
+            try
             {
-                if (rbIE.Checked == true)
+                List<Dictionary<string, string>> LTicketItemList = new List<Dictionary<string, string>>();
+                List<Dictionary<string, string>> LActionList = new List<Dictionary<string, string>>();
+
+                var nStartTick = DateTime.Now;
+
+                bool bExcelReadResult = true;
+                bool bCreateResult = false;
+                int tryCnt = 0;
+
+                if (rbKPMRead.Checked == true || rbTKCancel.Checked == true)
                 {
-                    g_WebControl = new WebControl_SHDoc();
+                    rbB2B.Checked = true;
+                    rbIE.Checked = true;
+                }
+
+                if (rbB2C.Checked == true)
+                {
+                    // Because of the error below, IE can't be used for B2C. (Use FF)
+                    // The RPC server is unavailable. (Exception from HRESULT: 0x800706BA)'
+                    rbFirefox.Checked = true;
                 }
                 else
                 {
-                    g_WebControl = new WebControl_SHDoc();
+                    rbIE.Checked = true;
                 }
-                g_WebControl.SetStatusBox(ref richTB_Status);
 
-                g_WebControl.OpenWebSite(rbB2B, rbB2C, rbKPMRead, tB2BID, tB2BPW);  // Go to KPM site
-                g_WebControl.GoToMainPage(LActionList[0]);
-
-                if (rbKPMRead.Checked == true)
+                g_ExcelTool = new ExcelControl(ref g_Util);
+                if (g_ExcelTool.ReadExcelValue(tExcelPath, rbB2B, rbB2C, rbAudi, rbPorsche, rbKPMRead, rbTKCancel, ref LTicketItemList, ref LActionList, ref processes) == true)   // Data read from Excel Files
                 {
-                    while (bCreateResult == false && tryCnt < 3)
+                    if (rbIE.Checked == true)
                     {
-                        bCreateResult = g_WebControl.KPMRead(ref LActionList, ref g_ExcelTool);   // Start Ticket Creation
-                        tryCnt++;
+                        g_WebControl_SHDOC = new WebControl_SHDoc(ref g_Util);
+
+                        g_WebControl_SHDOC.OpenWebSite(rbB2B, rbB2C, rbKPMRead, tB2BID, tB2BPW, ref processes);  // Go to KPM site
+                        g_WebControl_SHDOC.GoToMainPage(LActionList[0]);
+
+                        if (rbKPMRead.Checked == true)
+                        {
+                            while (bCreateResult == false && tryCnt < 3)
+                            {
+                                bCreateResult = g_WebControl_SHDOC.KPMRead(ref LActionList, ref g_ExcelTool);   // KPM Read
+                                tryCnt++;
+                            }
+                        }
+                        else if (rbTKCancel.Checked == true)
+                        {
+                            bCreateResult = g_WebControl_SHDOC.Delete(ref LTicketItemList, ref LActionList, ref g_ExcelTool);   // Cancel Ticket
+                        }
+                        else
+                        {
+                            while (bCreateResult == false && tryCnt < 3)
+                            {
+                                bCreateResult = g_WebControl_SHDOC.CreateTickets(ref LTicketItemList, ref LActionList);   // Start Ticket Creation
+                                tryCnt++;
+                            }
+                        }
                     }
+                    else
+                    {
+                        g_WebControl_Selenium = new WebControl_Selenium(ref g_Util);
+                        g_WebControl_Selenium.OpenWebSite(rbB2B, rbB2C, rbKPMRead, tB2BID, tB2BPW, ref processes);  // Go to KPM site
+                        g_WebControl_Selenium.GoToMainPage(ref LTicketItemList, ref LActionList);
+
+                        while (bCreateResult == false && tryCnt < 3)
+                        {
+                            bCreateResult = g_WebControl_Selenium.CreateTickets(ref LTicketItemList, ref LActionList);   // Start Ticket Creation
+                            tryCnt++;
+                        }
+                    }
+
+                    g_ExcelTool.UpdateKPMDocument(LTicketItemList);
                 }
                 else
                 {
-                    while (bCreateResult == false && tryCnt < 3)
-                    {
-                        bCreateResult = g_WebControl.CreateTickets(ref LTicketItemList, ref LActionList);   // Start Ticket Creation
-                        tryCnt++;
-                    }
+                    bExcelReadResult = false;
+                }
+                var nEndTick = DateTime.Now;
+                long nGap = nEndTick.Ticks - nStartTick.Ticks;
+                var nDiffSpan = new TimeSpan(nGap);
+
+                string ResultReport = "";
+                if (bExcelReadResult == false)
+                {
+                    ResultReport = "[Abnormal Termination!] Excel Path is Strange or ReadOnly. Please check your Excel File.";
+                }
+                else if (bCreateResult == false)
+                {
+                    ResultReport = "[Abnormal Termination!] Something happen during creation. Please try it later. Try Count= " + tryCnt;
+                }
+                else
+                {
+                    ResultReport = "Creation Success. " + LTicketItemList.Count + " Tickets (" + nDiffSpan.Hours + "hr:" + nDiffSpan.Minutes + "min:" + nDiffSpan.Seconds + "sec). Try Count= " + tryCnt;
                 }
 
-                g_ExcelTool.UpdateKPMDocument(LTicketItemList);
+                g_Util.DebugPrint(ResultReport);
             }
-            else
+            catch (Exception error)
             {
-                bExcelReadResult = false;
+                g_Util.DebugPrint(error.ToString());
+                CloseAll();
             }
-            var nEndTick = DateTime.Now;
-            long nGap = nEndTick.Ticks - nStartTick.Ticks;
-            var nDiffSpan = new TimeSpan(nGap);
+        }
 
-            string ResultReport = "";
-            if (bExcelReadResult == false)
-            {
-                ResultReport = "[Abnormal Termination!] Excel Path is Strange or ReadOnly. Please check your Excel File.";
-            }
-            else if (bCreateResult == false)
-            {
-                ResultReport = "[Abnormal Termination!] Something happen during creation. Please try it later. Try Count= " + tryCnt;
-            }
-            else
-            {
-                ResultReport = "Creation Success. " + LTicketItemList.Count + " Tickets (" + nDiffSpan.Hours + "hr:" + nDiffSpan.Minutes + "min:" + nDiffSpan.Seconds + "sec). Try Count= " + tryCnt;
-            }
+        private void Form1_FormLoading(Object sender, EventArgs e)
+        {
+            //Properties.Settings.Default.Reload();
+        }
 
-            richTB_Status.Text = ResultReport;
-            System.Diagnostics.Debug.WriteLine(ResultReport);
+        private void Form1_Closing(Object sender, CancelEventArgs e)
+        {
+            CloseAll();
+        }
+
+        private void Form1_Closed(Object sender, EventArgs e)
+        {
+            CloseAll();
+        }
+
+        private void Form1_FormClosed(Object sender, FormClosedEventArgs e)
+        {
+            CloseAll();
         }
 
         private void Form1_FormClosing(Object sender, FormClosingEventArgs e)
         {
-            g_ExcelTool.CloseExcelControl();
+            CloseAll();
+        }
 
-            //if (e.CloseReason == CloseReason.UserClosing)
-            //{
-            //    int ete = 2;
-            //}
+        private void CloseAll()
+        {
+            if (g_ExcelTool != null)
+            {
+                g_ExcelTool.CloseExcelControl(ref processes);
+            }
+
+            if (processes != null)
+            {
+                foreach (Process Iter in processes)
+                {
+                    System.Diagnostics.Debug.WriteLine("Kill " + Iter.ProcessName);
+                    try
+                    {
+                        Process.GetProcessById(Iter.Id);
+                        Iter.Kill();
+                    }
+                    catch
+                    {
+                        continue;
+                    }
+                }
+            }
         }
     }
 }
