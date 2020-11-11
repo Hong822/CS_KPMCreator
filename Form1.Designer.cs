@@ -45,17 +45,13 @@ namespace CS_KPMCreator
             this.rbChrome = new System.Windows.Forms.RadioButton();
             this.rbFirefox = new System.Windows.Forms.RadioButton();
             this.rbIE = new System.Windows.Forms.RadioButton();
-            this.Brand = new System.Windows.Forms.GroupBox();
-            this.rbPorsche = new System.Windows.Forms.RadioButton();
-            this.rbAudi = new System.Windows.Forms.RadioButton();
             this.richTB_Status = new System.Windows.Forms.RichTextBox();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.rbTKCancel = new System.Windows.Forms.RadioButton();
             this.rbKPMRead = new System.Windows.Forms.RadioButton();
             this.rbCreation = new System.Windows.Forms.RadioButton();
-            this.rbTKCancel = new System.Windows.Forms.RadioButton();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
-            this.Brand.SuspendLayout();
             this.groupBox3.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -207,44 +203,11 @@ namespace CS_KPMCreator
             this.rbIE.Text = "Internet Explorer";
             this.rbIE.UseVisualStyleBackColor = true;
             // 
-            // Brand
-            // 
-            this.Brand.Controls.Add(this.rbPorsche);
-            this.Brand.Controls.Add(this.rbAudi);
-            this.Brand.Location = new System.Drawing.Point(40, 308);
-            this.Brand.Name = "Brand";
-            this.Brand.Size = new System.Drawing.Size(479, 51);
-            this.Brand.TabIndex = 6;
-            this.Brand.TabStop = false;
-            this.Brand.Text = "Brand";
-            // 
-            // rbPorsche
-            // 
-            this.rbPorsche.AutoSize = true;
-            this.rbPorsche.Location = new System.Drawing.Point(226, 20);
-            this.rbPorsche.Name = "rbPorsche";
-            this.rbPorsche.Size = new System.Drawing.Size(70, 16);
-            this.rbPorsche.TabIndex = 1;
-            this.rbPorsche.Text = "Porsche";
-            this.rbPorsche.UseVisualStyleBackColor = true;
-            // 
-            // rbAudi
-            // 
-            this.rbAudi.AutoSize = true;
-            this.rbAudi.Checked = true;
-            this.rbAudi.Location = new System.Drawing.Point(18, 20);
-            this.rbAudi.Name = "rbAudi";
-            this.rbAudi.Size = new System.Drawing.Size(48, 16);
-            this.rbAudi.TabIndex = 0;
-            this.rbAudi.TabStop = true;
-            this.rbAudi.Text = "Audi";
-            this.rbAudi.UseVisualStyleBackColor = true;
-            // 
             // richTB_Status
             // 
-            this.richTB_Status.Location = new System.Drawing.Point(42, 432);
+            this.richTB_Status.Location = new System.Drawing.Point(42, 380);
             this.richTB_Status.Name = "richTB_Status";
-            this.richTB_Status.Size = new System.Drawing.Size(477, 36);
+            this.richTB_Status.Size = new System.Drawing.Size(477, 88);
             this.richTB_Status.TabIndex = 7;
             this.richTB_Status.Text = "";
             // 
@@ -253,12 +216,22 @@ namespace CS_KPMCreator
             this.groupBox3.Controls.Add(this.rbTKCancel);
             this.groupBox3.Controls.Add(this.rbKPMRead);
             this.groupBox3.Controls.Add(this.rbCreation);
-            this.groupBox3.Location = new System.Drawing.Point(40, 365);
+            this.groupBox3.Location = new System.Drawing.Point(40, 312);
             this.groupBox3.Name = "groupBox3";
             this.groupBox3.Size = new System.Drawing.Size(479, 51);
             this.groupBox3.TabIndex = 7;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Program Action";
+            // 
+            // rbTKCancel
+            // 
+            this.rbTKCancel.AutoSize = true;
+            this.rbTKCancel.Location = new System.Drawing.Point(370, 20);
+            this.rbTKCancel.Name = "rbTKCancel";
+            this.rbTKCancel.Size = new System.Drawing.Size(101, 16);
+            this.rbTKCancel.TabIndex = 2;
+            this.rbTKCancel.Text = "Ticket Cancel";
+            this.rbTKCancel.UseVisualStyleBackColor = true;
             // 
             // rbKPMRead
             // 
@@ -282,16 +255,6 @@ namespace CS_KPMCreator
             this.rbCreation.Text = "Ticket Creation";
             this.rbCreation.UseVisualStyleBackColor = true;
             // 
-            // rbTKCancel
-            // 
-            this.rbTKCancel.AutoSize = true;
-            this.rbTKCancel.Location = new System.Drawing.Point(370, 20);
-            this.rbTKCancel.Name = "rbTKCancel";
-            this.rbTKCancel.Size = new System.Drawing.Size(101, 16);
-            this.rbTKCancel.TabIndex = 2;
-            this.rbTKCancel.Text = "Ticket Cancel";
-            this.rbTKCancel.UseVisualStyleBackColor = true;
-            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 12F);
@@ -299,20 +262,17 @@ namespace CS_KPMCreator
             this.ClientSize = new System.Drawing.Size(555, 552);
             this.Controls.Add(this.groupBox3);
             this.Controls.Add(this.richTB_Status);
-            this.Controls.Add(this.Brand);
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.bStartCreation);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.tExcelPath);
             this.Controls.Add(this.bExcelSelect);
             this.Name = "Form1";
-            this.Text = "KPM Creator V1.0";
+            this.Text = "KPM Creator V2.0";
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             this.groupBox2.ResumeLayout(false);
             this.groupBox2.PerformLayout();
-            this.Brand.ResumeLayout(false);
-            this.Brand.PerformLayout();
             this.groupBox3.ResumeLayout(false);
             this.groupBox3.PerformLayout();
             this.ResumeLayout(false);
@@ -336,9 +296,6 @@ namespace CS_KPMCreator
         private System.Windows.Forms.RadioButton rbChrome;
         private System.Windows.Forms.RadioButton rbFirefox;
         private System.Windows.Forms.RadioButton rbIE;
-        private System.Windows.Forms.GroupBox Brand;
-        private System.Windows.Forms.RadioButton rbPorsche;
-        private System.Windows.Forms.RadioButton rbAudi;
         private System.Windows.Forms.RichTextBox richTB_Status;
         private System.Windows.Forms.GroupBox groupBox3;
         private System.Windows.Forms.RadioButton rbKPMRead;

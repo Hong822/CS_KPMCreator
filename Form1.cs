@@ -64,13 +64,10 @@ namespace CS_KPMCreator
                     // The RPC server is unavailable. (Exception from HRESULT: 0x800706BA)'
                     rbFirefox.Checked = true;
                 }
-                else
-                {
-                    rbIE.Checked = true;
-                }
 
                 g_ExcelTool = new ExcelControl(ref g_Util);
-                if (g_ExcelTool.ReadExcelValue(tExcelPath, rbB2B, rbB2C, rbAudi, rbPorsche, rbKPMRead, rbTKCancel, ref LTicketItemList, ref LActionList, ref processes) == true)   // Data read from Excel Files
+                int nTicketCNT = 0;
+                if (g_ExcelTool.ReadExcelValue(tExcelPath, rbB2B, rbB2C, rbKPMRead, rbTKCancel, ref LTicketItemList, ref LActionList, ref processes) == true)   // Data read from Excel Files
                 {
                     if (rbIE.Checked == true)
                     {
@@ -104,11 +101,11 @@ namespace CS_KPMCreator
                     {
                         g_WebControl_Selenium = new WebControl_Selenium(ref g_Util);
                         g_WebControl_Selenium.OpenWebSite(rbB2B, rbB2C, rbKPMRead, tB2BID, tB2BPW, ref processes);  // Go to KPM site
-                        g_WebControl_Selenium.GoToMainPage(ref LTicketItemList, ref LActionList);
+                        g_WebControl_Selenium.GoToMainPage(ref LTicketItemList, ref LActionList, rbB2C);
 
                         while (bCreateResult == false && tryCnt < 3)
                         {
-                            bCreateResult = g_WebControl_Selenium.CreateTickets(ref LTicketItemList, ref LActionList);   // Start Ticket Creation
+                            bCreateResult = g_WebControl_Selenium.CreateTickets(ref LTicketItemList, ref LActionList, rbB2C, ref nTicketCNT);   // Start Ticket Creation
                             tryCnt++;
                         }
                     }
@@ -134,7 +131,7 @@ namespace CS_KPMCreator
                 }
                 else
                 {
-                    ResultReport = "Creation Success. " + LTicketItemList.Count + " Tickets (" + nDiffSpan.Hours + "hr:" + nDiffSpan.Minutes + "min:" + nDiffSpan.Seconds + "sec). Try Count= " + tryCnt;
+                    ResultReport = "Creation Success. " + nTicketCNT + " Tickets (" + nDiffSpan.Hours + "hr:" + nDiffSpan.Minutes + "min:" + nDiffSpan.Seconds + "sec). Try Count= " + tryCnt;
                 }
 
                 g_Util.DebugPrint(ResultReport);

@@ -148,7 +148,7 @@ namespace CS_KPMCreator
             }
         }
 
-        public bool ReadExcelValue(System.Windows.Forms.TextBox tExcelPath, RadioButton rbB2B, RadioButton rbB2C, RadioButton rbAudi, RadioButton rbPorsche, RadioButton rbKPMRead, RadioButton rbTKCancel, ref List<Dictionary<string, string>> LTicketItemList, ref List<Dictionary<string, string>> LActionList, ref List<Process> processes)
+        public bool ReadExcelValue(System.Windows.Forms.TextBox tExcelPath, RadioButton rbB2B, RadioButton rbB2C, RadioButton rbKPMRead, RadioButton rbTKCancel, ref List<Dictionary<string, string>> LTicketItemList, ref List<Dictionary<string, string>> LActionList, ref List<Process> processes)
         {
             g_Util.DebugPrint("I'm reading KPM Excel File...");
 
@@ -158,6 +158,7 @@ namespace CS_KPMCreator
             g_KPMExcelApp = new Excel.Application();
             try
             {
+                //Hard coding
                 //tExcelPath.Text = "E:\\VS_Project\\repos\\Hong822\\CS_KPMCreator\\KPM_Ticket_Creator_V1.xlsm";
                 //tExcelPath.Text = "D:\\25_C_Projects\\Repos\\Hong822\\CS_KPMCreator\\KPM_Ticket_Creator_V1.xlsm";
 
@@ -208,9 +209,10 @@ namespace CS_KPMCreator
             var Dir = System.IO.Directory.GetCurrentDirectory();
             //Dir = Dir.Substring(0, Dir.LastIndexOf("\\"));
 
+            //Hard coding
             string ActionExcelPath = Dir + "\\KPM_Action_Description.xlsm";
             //string ActionExcelPath = "E:\\VS_Project\\repos\\Hong822\\CS_KPMCreator\\KPM_Action_Description.xlsm";
-            //ActionExcelPath = "D:\\25_C_Projects\\Repos\\Hong822\\CS_KPMCreator\\KPM_Action_Description.xlsm";
+            //ActionExcelPath = "D:\\25_C_Projects\\Repos\\Hong822\\CS_KPMCreator\\bin\\Debug\\KPM_Action_Description.xlsm";
 
             try
             {
@@ -236,34 +238,13 @@ namespace CS_KPMCreator
             }
             else
             {
-                if (rbPorsche.Checked == true)
-                {
-                    if (rbB2B.Checked == true)
-                    {
-                        ActionSheet = "PO_B2B";
-                    }
-                    else
-                    {
-                        ActionSheet = "PO_B2C";
-                    }
-                }
-                else    // Audi
-                {
-                    if (rbB2B.Checked == true)
-                    {
-                        ActionSheet = "AU_B2B";
-                    }
-                    else
-                    {
-                        ActionSheet = "AU_B2C";
-                    }
-                }
+                ActionSheet = (rbB2B.Checked == true) ? "B2B": "B2C"; 
             }
 
             ActionWS = ActionWB.Worksheets[ActionSheet];
             g_Util.DebugPrint("I'm reading Action Excel File...\t" + ActionSheet);
 
-            ActionApp.Visible = false;
+            //ActionApp.Visible = false;
             //ActionApp.Visible = true;
 
             // Fill in ticketItemList with ticket items

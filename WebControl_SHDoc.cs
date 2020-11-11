@@ -326,7 +326,7 @@ namespace CS_KPMCreator
             else if (ActionItem["ActionType"] == "DROPBOX")
             {
                 string TicketKey = ActionItem["InputString"];
-                bResult = WA.SetComboItem(IE, doc, ActionItem["ID"], ActionItem["ListID"], TicketItem[TicketKey]);
+                bResult = WA.SetComboItem(IE, doc, ActionItem["ID"], ActionItem["SubID"], TicketItem[TicketKey]);
             }
             else if (ActionItem["ActionType"] == "INPUT_TEXT")
             {
@@ -348,7 +348,7 @@ namespace CS_KPMCreator
             }
             else if (ActionItem["ActionType"] == "CALLEVENT")
             {
-                bResult = WA.CallEvent(IE, doc, ActionItem["ID"], ActionItem["ListID"]);
+                bResult = WA.CallEvent(IE, doc, ActionItem["ID"], ActionItem["SubID"]);
             }
             else if (ActionItem["ActionType"] == "READ_DROPBOX")
             {

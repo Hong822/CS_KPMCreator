@@ -1,6 +1,7 @@
 ﻿using OpenQA.Selenium;
 using OpenQA.Selenium.Firefox;
 using OpenQA.Selenium.Support.UI;
+using SHDocVw;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -88,14 +89,14 @@ namespace CS_KPMCreator
             WA.TotalWait(FF_driver);
         }
 
-        public bool GoToMainPage(ref List<Dictionary<string, string>> TicketItemList, ref List<Dictionary<string, string>> LActionList)
+        public bool GoToMainPage(ref List<Dictionary<string, string>> TicketItemList, ref List<Dictionary<string, string>> LActionList, RadioButton rbB2C)
         {
             g_Util.DebugPrint("Please Login KPM... ");
             bool bResult = true;
 
             string ID = LActionList[0]["ID"];
             string SearchType = LActionList[0]["SearchType"];
-            WA.TotalWait(FF_driver, ID, SearchType, "Exist", 600000);    // Wait for 10 min to Login.
+            WA.TotalWait(FF_driver, ID, SearchType, 600000);    // Wait for 10 min to Login.
             WA.ManualWait(5000);
 
             Dictionary<string, string> TicketItem = TicketItemList[0];
@@ -104,9 +105,9 @@ namespace CS_KPMCreator
             for (int nIdx = 0; nIdx < LActionList.Count; nIdx++)
             {
                 Dictionary<string, string> ActionItem = LActionList[nIdx];
-                if (ActionItem["Step"] == "StartEvent")
+                if (ActionItem["Step"] == "StartEvent" && ActionItem["Execute"] != "X")
                 {
-                    if (CallAction(ref TicketItem, ref ActionItem, ref DummyList) == false)
+                    if (CallAction(ref TicketItem, ref ActionItem, ref DummyList, rbB2C) == false)
                     {
                         bResult = false;
                         break;
@@ -116,7 +117,7 @@ namespace CS_KPMCreator
             return bResult;
         }
 
-        public bool CreateTickets(ref List<Dictionary<string, string>> TicketItemList, ref List<Dictionary<string, string>> LActionList)
+        public bool CreateTickets(ref List<Dictionary<string, string>> TicketItemList, ref List<Dictionary<string, string>> LActionList, RadioButton rbB2C, ref int nTicketCNT)
         {
             bool bResult = true;
 
@@ -127,20 +128,26 @@ namespace CS_KPMCreator
             //for (int nIdx = 0; nIdx < 1; nIdx++)
             {
                 Dictionary<string, string> dItem = TicketItemList[nIdx];
-                if (dItem["Number"] == null)
+                
+                bool bCreateTicket = (dItem["Number"] == null) ? true : false;
+                bool bUplaodData = (dItem["Re-upload Attachment"] != "X") ? true : false;
+                bool bExecute = false;
+
+                if (bCreateTicket == true)
                 {
-                    if (CreateOneTicket(ref dItem, ref LActionList) == false) // create ticket
+                    if (CreateOneTicket(ref dItem, ref LActionList, rbB2C) == false) // create ticket
                     {
                         bResult = false;
                         break;
                     }
+
+                    bExecute = true;
                 }
 
-                string ticketNum = dItem["Number"];
                 bool bNum = true;
                 try
                 {
-                    int temp = Int32.Parse(ticketNum);
+                    int temp = Int32.Parse(dItem["Number"]);
                     bNum = true;
                 }
                 catch
@@ -148,25 +155,33 @@ namespace CS_KPMCreator
                     bNum = false;
                 }
                 //bool bNum = int.Parse(dItem["Number"]).GetType().Equals(typeof(int));
-                if (dItem["Re-upload Attachment"] != "X" && dItem["Documents"] != null && bNum == true)
+                if (bUplaodData == true && dItem["Documents"] != null && bNum == true)
                 {
-                    if (GoToAttachmentPage(ref dItem, ref LActionList) == false)
+                    bExecute = true;
+
+                    if (GoToAttachmentPage(ref dItem, ref LActionList, rbB2C) == false)
                     {
                         bResult = false;
                         break;
                     }
 
-                    if (UploadAttachment(ref dItem, ref LActionList) == false)
+                    if (UploadAttachment(ref dItem, ref LActionList, rbB2C) == false)
                     {
                         bResult = false;
                         break;
                     }
                 }
+
+                if (bExecute == true)
+                {
+                    nTicketCNT++;
+                }
+
             }
             return bResult;
         }
 
-        private bool CreateOneTicket(ref Dictionary<string, string> TicketItem, ref List<Dictionary<string, string>> LActionList)
+        private bool CreateOneTicket(ref Dictionary<string, string> TicketItem, ref List<Dictionary<string, string>> LActionList, RadioButton rbB2C)
         {
             bool bResult = true;
             List<Dictionary<KPMReadInfo, List<string>>> DummyList = null;
@@ -176,7 +191,7 @@ namespace CS_KPMCreator
                 Dictionary<string, string> ActionItem = LActionList[nIdx];
                 if (ActionItem["Step"] == "CreateTicket" && ActionItem["Execute"] != "X")
                 {
-                    if (CallAction(ref TicketItem, ref ActionItem, ref DummyList) == false)
+                    if (CallAction(ref TicketItem, ref ActionItem, ref DummyList, rbB2C) == false)
                     {
                         bResult = false;
                         break;
@@ -186,7 +201,7 @@ namespace CS_KPMCreator
             return bResult;
         }
 
-        private bool GoToAttachmentPage(ref Dictionary<string, string> TicketItem, ref List<Dictionary<string, string>> LActionList)
+        private bool GoToAttachmentPage(ref Dictionary<string, string> TicketItem, ref List<Dictionary<string, string>> LActionList, RadioButton rbB2C)
         {
             bool bResult = true;
             List<Dictionary<KPMReadInfo, List<string>>> DummyList = null;
@@ -196,7 +211,7 @@ namespace CS_KPMCreator
                 Dictionary<string, string> ActionItem = LActionList[nIdx];
                 if (ActionItem["Step"] == "GoToAttach" && ActionItem["Execute"] != "X")
                 {
-                    if (CallAction(ref TicketItem, ref ActionItem, ref DummyList) == false)
+                    if (CallAction(ref TicketItem, ref ActionItem, ref DummyList, rbB2C) == false)
                     {
                         bResult = false;
                         break;
@@ -206,7 +221,7 @@ namespace CS_KPMCreator
             return bResult;
         }
 
-        private bool UploadAttachment(ref Dictionary<string, string> TicketItem, ref List<Dictionary<string, string>> LActionList)
+        private bool UploadAttachment(ref Dictionary<string, string> TicketItem, ref List<Dictionary<string, string>> LActionList, RadioButton rbB2C)
         {
             bool bResult = true;
 
@@ -242,7 +257,7 @@ namespace CS_KPMCreator
                             nText = attachments[idx];
                         }
 
-                        if (CallAction(ref TicketItem, ref ActionItem, ref DummyList, nText) == false)
+                        if (CallAction(ref TicketItem, ref ActionItem, ref DummyList, rbB2C, nText) == false)
                         {
                             bResult = false;
                             return bResult;
@@ -287,15 +302,46 @@ namespace CS_KPMCreator
             return bResult;
         }
 
-        private bool CallAction(ref Dictionary<string, string> TicketItem, ref Dictionary<string, string> ActionItem, ref List<Dictionary<KPMReadInfo, List<string>>> ReadList, string TxtForUpload = null, string Read_Input_String = "")
+        private bool CoordinatorCheck(ref Dictionary<string, string> TicketItem, ref Dictionary<string, string> ActionItem)
+        {
+            bool bResult = true;
+            string TicketKey = "";
+            if (ActionItem["Comment"] == "Coordinator")
+            {
+                TicketKey = "Coordinator user";
+            }
+            else if (ActionItem["Comment"] == "S.Coordinator")
+            {
+                TicketKey = "Spclst. coord User";
+            }
+            else if (ActionItem["Comment"] == "Solver")
+            {
+                TicketKey = "Problem Solver User";
+            }
+
+            if (TicketKey != "" && TicketItem[TicketKey] == null)
+            {
+                bResult = false;
+            }
+
+            return bResult;
+        }
+
+        private bool CallAction(ref Dictionary<string, string> TicketItem, ref Dictionary<string, string> ActionItem, ref List<Dictionary<KPMReadInfo, List<string>>> ReadList, RadioButton rbB2C, string TxtForUpload = null, string Read_Input_String = "")
         {
             bool bResult = true;
 
-            g_Util.DebugPrint("I am doing... " + ActionItem["Comment"]);
+            if (CoordinatorCheck(ref TicketItem, ref ActionItem) == false)
+            {
+                return true;
+            }
+            
+            g_Util.DebugPrint("\nI am doing... " + ActionItem["Comment"]);
+            bool bSkipable = (ActionItem["Skipable"] == "O")? true: false;
 
             if (ActionItem["ActionType"] == "CLICK")
             {
-                bResult = WA.ClickButton(FF_driver, ActionItem["ID"], ActionItem["SearchType"]);
+                bResult = WA.ClickButton(FF_driver, ActionItem["ID"], ActionItem["SearchType"], bSkipable);
             }
             else if (ActionItem["ActionType"] == "JAVASCRIPT")
             {
@@ -304,12 +350,12 @@ namespace CS_KPMCreator
             else if (ActionItem["ActionType"] == "DROPBOX")
             {
                 string TicketKey = ActionItem["InputString"];
-                bResult = WA.SetComboItem(FF_driver, ActionItem["ID"], ActionItem["ListID"], TicketItem[TicketKey]);
+                bResult = WA.SetComboItem(FF_driver, ActionItem["ID"], TicketItem[TicketKey]);
             }
             else if (ActionItem["ActionType"] == "DROPBOX_BYSELECT")
             {
                 string TicketKey = ActionItem["InputString"];
-                bResult = WA.SetComboItemBySelect(FF_driver, ActionItem["ID"], TicketItem[TicketKey]);
+                //bResult = WA.SetComboItemBySelect(FF_driver, ActionItem["ID"], TicketItem[TicketKey]);
             }
             else if (ActionItem["ActionType"] == "INPUT_TEXT")
             {
@@ -322,8 +368,12 @@ namespace CS_KPMCreator
             }
             else if (ActionItem["ActionType"] == "GOTOURL")
             {
-                // if B2C
-                string URL = ActionItem["ID"] + TicketItem["Number"] + "&oid=";
+                string URL = ActionItem["ID"] + TicketItem["Number"];
+                if (rbB2C.Checked == true)
+                {
+                    URL += "&oid=";
+                }  
+
                 GoToURL(URL);
             }
             else if (ActionItem["ActionType"] == "INPUT_UPLOAD")
@@ -332,7 +382,7 @@ namespace CS_KPMCreator
             }
             else if (ActionItem["ActionType"] == "CALLEVENT")
             {
-                bResult = WA.CallEvent(FF_driver, ActionItem["ID"], ActionItem["ListID"]);
+                bResult = WA.CallEvent(FF_driver, ActionItem["ID"], ActionItem["SubID"]);
             }
             else if (ActionItem["ActionType"] == "READ_DROPBOX")
             {
@@ -354,10 +404,7 @@ namespace CS_KPMCreator
             {
                 WA.ManualWait(Int32.Parse(ActionItem["WaitTime"]));
             }
-            else 
-            {
-                WA.ManualWait();
-            }
+
 
             return bResult;
         }

@@ -2,8 +2,8 @@
 using OpenQA.Selenium;
 using OpenQA.Selenium.Support.UI;
 using SHDocVw;
-using System;
 using System.Collections.Generic;
+using System.Net.Mail;
 
 namespace CS_KPMCreator
 {
@@ -36,18 +36,20 @@ namespace CS_KPMCreator
         Wait Functions for IE
         */
 
-        public void TotalWait(InternetExplorer IE, HTMLDocument doc, string ID = null, string ElemType = "ID", string WaitType = "Exist", int nTimer = 5000)
+        public bool TotalWait(InternetExplorer IE, HTMLDocument doc, string ID = null, string ElemType = "ID", int nTimer = 5000)
         {
-            LoadingWait(doc, nTimer);
-            WaitPageLoading(IE, nTimer);
+            bool bResult = LoadingWait(doc, nTimer);
+            bResult = WaitPageLoading(IE, nTimer);
             if (ID != null)
             {
-                WaitUntilID(doc, ID, ElemType, WaitType);
+                bResult = WaitUntilID(doc, ID, ElemType);
             }
+            return bResult;
         }
 
-        public void LoadingWait(HTMLDocument doc, int nTimer = 1000)
+        public bool LoadingWait(HTMLDocument doc, int nTimer = 1000)
         {
+            bool bResult = true;
             int nCurTime = 0;
             while (true)
             {
@@ -58,16 +60,21 @@ namespace CS_KPMCreator
 #endif
                     nCurTime += nTimer;
                     System.Threading.Thread.Sleep(nTimer);
+                    bResult = false;
                 }
                 else
                 {
+                    bResult = true;
                     break;
                 }
             }
+
+            return bResult;
         }
 
-        public void WaitPageLoading(InternetExplorer IE, int nTimer = 1000)
+        public bool WaitPageLoading(InternetExplorer IE, int nTimer = 1000)
         {
+            bool bResult = true;
             int nCurTime = 0;
 #if (DEBUG)
             g_Util.DebugPrint("Wait for Page Loading.");
@@ -80,13 +87,16 @@ namespace CS_KPMCreator
                 nCurTime += nTimer;
                 System.Threading.Thread.Sleep(nTimer);
             }
+
+            return bResult;
         }
 
-        private void WaitUntilID(HTMLDocument doc, string ID, string ElemType = "ID", string WaitType = "Exist")
+        private bool WaitUntilID(HTMLDocument doc, string ID, string ElemType = "ID")
         {
+            bool bResult = true;
             int nTimer = 60;
             int nTry = 0;
-            //if (WaitType == "Exist")
+
             if (ElemType == "ID")
             {
                 while (nTry < nTimer)
@@ -98,12 +108,14 @@ namespace CS_KPMCreator
                         g_Util.DebugPrint("Wait ID = " + ID);
 #endif
                         System.Threading.Thread.Sleep(1000);
+                        bResult = false;
                     }
                     else
                     {
 #if (DEBUG)
                         g_Util.DebugPrint("Find ID = " + ID);
 #endif
+                        bResult = true;
                         break;
                     }
                 }
@@ -119,124 +131,20 @@ namespace CS_KPMCreator
                         g_Util.DebugPrint("Wait ID = " + ID);
 #endif
                         System.Threading.Thread.Sleep(1000);
+                        bResult = false;
                     }
                     else
                     {
 #if (DEBUG)
                         g_Util.DebugPrint("Find ID = " + ID);
 #endif
+                        bResult = true;
                         break;
                     }
                 }
             }
-        }
 
-        /*
-        Wait Functions for Selenium
-        */
-
-        public void TotalWait(IWebDriver FF_driver, string ID = null, string ElemType = "ID", string WaitType = "Exist", int nTimer = 1000)
-        {
-            LoadingWait(FF_driver, nTimer);
-
-            if (ID != null)
-            {
-                WaitUntilID(FF_driver, ID, ElemType, WaitType);
-            }
-        }
-
-        public void LoadingWait(IWebDriver FF_driver, int nTimer)
-        {
-            string FindID = "progressDialog_modal";
-
-            int nCurTime = 0;
-            IWebElement element = null;
-            while (true)
-            {
-                if (nCurTime > nTimeoutLimit)
-                {
-                    g_Util.DebugPrint("LoadingDialog Check Time Out. " + nCurTime + "ms");
-                    break;
-                }
-
-                try
-                {
-                    element = FF_driver.FindElement(By.Id(FindID));
-#if (DEBUG)
-                    g_Util.DebugPrint("ProgressDialog Wait (" + nCurTime / 1000 + "sec)");
-#endif
-                    nCurTime += nTimer;
-                    System.Threading.Thread.Sleep(nTimer);
-                }
-                catch (System.Exception e)
-                {
-                    // No 'progressDialog_modal' Element = Loading is finished.\
-                    g_Util.DebugPrint("No progressDialog_modal! Loading is done.");
-                    break;
-                }
-            }
-        }
-
-        private void WaitUntilID(IWebDriver FF_driver, string ID, string ElemType = "ID", string WaitType = "Exist")
-        {
-            // Wait until Element becomes clickable.
-            int nCurTime = 0;
-            int nTimer = 500;
-            IWebElement element = null;
-            while (true && element == null)
-            {
-                if (nCurTime > nTimeoutLimit)
-                {
-                    g_Util.DebugPrint("FindElement Check Time Out. " + nCurTime + "ms");
-                    break;
-                }
-
-                try
-                {
-                    if (ElemType == "ID")
-                    {
-                        element = FF_driver.FindElement(By.Id(ID));
-                    }
-                    else if (ElemType == "NAME")
-                    {
-                        element = FF_driver.FindElement(By.Name(ID));
-                    }
-                }
-                catch (System.Exception e)
-                {
-                    // No Element. Let's wait more.
-#if (DEBUG)
-                    g_Util.DebugPrint("WaitUntilID, Present (" + ID + ", " + nCurTime / 1000 + " sec)");
-#endif
-                    nCurTime += nTimer;
-                    System.Threading.Thread.Sleep(nTimer);
-                }
-            }
-
-            nCurTime = 0;
-            element = null;
-            while (true && element == null)
-            {
-                if(nCurTime > nTimeoutLimit)
-                {
-                    g_Util.DebugPrint("Clickable Check Time Out. " + nCurTime + "ms");
-                    break;
-                }
-                try
-                {
-                    element = wait.Until(SeleniumExtras.WaitHelpers.ExpectedConditions.ElementToBeClickable(By.Id(ID)));
-                    g_Util.DebugPrint("Element became Clickable, " + ID);
-                }
-                catch (System.Exception e)
-                {
-                    // No Element. Let's wait more.
-#if (DEBUG)
-                    g_Util.DebugPrint("WaitUntilID, Clickable (" + ID + ", " + nCurTime / 1000 + " sec)");
-#endif
-                    nCurTime += nTimer;
-                    System.Threading.Thread.Sleep(nTimer);
-                }
-            }
+            return bResult;
         }
 
         public bool ClickButton(InternetExplorer IE, HTMLDocument doc, string ID, string ElemType = "ID")
@@ -245,7 +153,14 @@ namespace CS_KPMCreator
 #if (DEBUG)
             g_Util.DebugPrint("[ClickButton]" + ID);
 #endif
-            TotalWait(IE, doc, ID, ElemType);
+            if (TotalWait(IE, doc, ID, ElemType) == false)
+            {
+                if (ElemType != "NAME")
+                {
+                    g_Util.DebugPrint("Element Waiting False. Skip this action.  " + ID);
+                    return true;
+                }
+            }
 
             if (ElemType == "ID" || ElemType == null)
             {
@@ -282,56 +197,6 @@ namespace CS_KPMCreator
             return bResult;
         }
 
-        public bool ClickButton(IWebDriver FF_driver, string ID, string ElemType = "ID")
-        {
-            bool bResult = true;
-#if (DEBUG)
-            g_Util.DebugPrint("[ClickButton]" + ID);
-#endif
-            TotalWait(FF_driver, ID, ElemType);
-
-            IWebElement SelectedElement = null;
-
-            if (ElemType == "NAME")
-            {
-                try
-                {
-                    SelectedElement = FF_driver.FindElement(By.Name(ID));
-                }
-                catch (System.Exception e)
-                {
-                    g_Util.DebugPrint("No Element despite Waiting. Skip this action.  " + ID );
-                    return bResult;
-                }
-            }
-            else   // if (ElemType == "ID" || ElemType == null)
-            {
-                try
-                {
-                    SelectedElement = FF_driver.FindElement(By.Id(ID));
-                }
-                catch (System.Exception e)
-                {
-                    g_Util.DebugPrint("No Element despite Waiting. Skip this action.  " + ID);
-                    return bResult;
-                }
-            }
-
-            try
-            {
-                //wait.Until(SeleniumExtras.WaitHelpers.ExpectedConditions.ElementToBeClickable(By.Id(ID)));
-                SelectedElement.Click();
-                g_Util.DebugPrint("Click is Called. (" + ID + ")");
-            }
-            catch (System.Exception e)
-            {
-                g_Util.DebugPrint("Problem happen" + e);
-                bResult = false;
-            }
-
-            return bResult;
-        }
-
         public bool ExecuteJS(InternetExplorer IE, HTMLDocument doc, string ID)
         {
             bool bResult = true;
@@ -355,29 +220,7 @@ namespace CS_KPMCreator
             return bResult;
         }
 
-        public bool ExecuteJS(IWebDriver FF_driver, string ID)
-        {
-            bool bResult = true;
-#if (DEBUG)
-            g_Util.DebugPrint("[ExecuteJS] " + ID);
-#endif
-            TotalWait(FF_driver);
-
-            try
-            {
-                var jse = (IJavaScriptExecutor)FF_driver;
-                jse.ExecuteScript(ID, "");
-            }
-            catch (System.Exception e)
-            {
-                g_Util.DebugPrint("[Exception] " + e);
-                bResult = false;
-            }
-
-            return bResult;
-        }
-
-        public bool SetComboItem(InternetExplorer IE, HTMLDocument doc, string ParentID, string ListID, string InputValue)
+        public bool SetComboItem(InternetExplorer IE, HTMLDocument doc, string ParentID, string SubID, string InputValue)
         {
             bool bResult = true;
             if (InputValue != null)
@@ -398,8 +241,8 @@ namespace CS_KPMCreator
                     return bResult;
                 }
 
-                TotalWait(IE, doc, ListID);
-                IHTMLElementCollection elemcoll = doc.getElementById(ListID).children as IHTMLElementCollection;
+                TotalWait(IE, doc, SubID);
+                IHTMLElementCollection elemcoll = doc.getElementById(SubID).children as IHTMLElementCollection;
 
                 bool bFind = false;
                 foreach (IHTMLElement elem in elemcoll)
@@ -436,74 +279,6 @@ namespace CS_KPMCreator
                 {
                     g_Util.DebugPrint("No Item in List. Input Value = " + InputValue);
                 }
-            }
-
-            return bResult;
-        }
-
-        public bool SetComboItem(IWebDriver FF_driver, string ParentID, string ListID, string InputValue)
-        {
-            bool bResult = true;
-
-#if (DEBUG)
-            g_Util.DebugPrint("[SetComboItem]" + ParentID + ", " + InputValue);
-#endif
-            TotalWait(FF_driver, ParentID);
-            IWebElement SelectedElement = FF_driver.FindElement(By.Id(ParentID));
-                       
-            try
-            {
-                SelectedElement.Click();
-                g_Util.DebugPrint("Click called: " + ParentID);
-            }
-            catch (System.Exception e)
-            {
-                g_Util.DebugPrint("[Exception] " + e);
-                bResult = false;
-                return bResult;
-            }
-
-            TotalWait(FF_driver, ListID);
-
-            bool bFind = false;
-            SelectedElement = FF_driver.FindElement(By.Id(ListID));
-            foreach (var Elem in SelectedElement.FindElements(By.TagName("li")))
-            {
-                if (Elem.Text == InputValue)
-                {
-                    Elem.Click();
-                    bFind = true;
-                }
-            }
-
-            if (bFind == false)
-            {
-                g_Util.DebugPrint("No Item in List. Input Value = " + InputValue);
-            }
-
-            return bResult;
-        }
-
-        public bool SetComboItemBySelect(IWebDriver FF_driver, string ParentID, string InputValue)
-        {
-            bool bResult = true;
-
-#if (DEBUG)
-            g_Util.DebugPrint("[SetComboItemBySelect]" + ParentID + ", " + InputValue);
-#endif
-            TotalWait(FF_driver, ParentID);
-            IWebElement SelectedElement = FF_driver.FindElement(By.Id(ParentID));
-
-            try
-            {
-                var Elements = new SelectElement(SelectedElement);
-                Elements.SelectByText(InputValue);
-            }
-            catch (System.Exception e)
-            {
-                g_Util.DebugPrint("[Exception] " + e);
-                bResult = false;
-                return bResult;
             }
 
             return bResult;
@@ -617,31 +392,6 @@ namespace CS_KPMCreator
             return bResult;
         }
 
-        public bool SetTextBox(IWebDriver FF_driver, string ID, string InputText)
-        {
-            bool bResult = true;
-            if (InputText != null)
-            {
-#if (DEBUG)
-                g_Util.DebugPrint("[SetTextBox]" + ID + ", " + InputText);
-#endif
-
-                TotalWait(FF_driver, ID);
-                IWebElement SelectedElement = FF_driver.FindElement(By.Id(ID));
-
-                try
-                {
-                    SelectedElement.SendKeys(InputText);
-                }
-                catch (System.Exception e)
-                {
-                    g_Util.DebugPrint("[Exception] " + e);
-                    bResult = false;
-                }
-            }
-            return bResult;
-        }
-
         public bool CallEvent(InternetExplorer IE, HTMLDocument doc, string ID, string EventType)
         {
             bool bResult = true;
@@ -669,30 +419,6 @@ namespace CS_KPMCreator
             return bResult;
         }
 
-        public bool CallEvent(IWebDriver FF_driver, string ID, string EventType)
-        {
-            bool bResult = true;
-
-#if (DEBUG)
-            g_Util.DebugPrint("[CallEvent]" + ID + ", " + EventType);
-#endif
-
-            TotalWait(FF_driver, ID);
-            IWebElement SelectedElement = FF_driver.FindElement(By.Id(ID));
-
-            IJavaScriptExecutor jsExecutor = (IJavaScriptExecutor)FF_driver;
-            if (EventType == "onchange")
-            {
-                jsExecutor.ExecuteScript("$(arguments[0]).change();", SelectedElement);
-            }
-            else if (EventType == "onkeyup")
-            {
-                jsExecutor.ExecuteScript("$(arguments[0]).keyup();", SelectedElement);
-            }
-
-            return bResult;
-        }
-
         public string GetText(InternetExplorer IE, HTMLDocument doc, string ID)
         {
 #if (DEBUG)
@@ -715,24 +441,570 @@ namespace CS_KPMCreator
             return sText;
         }
 
+        /*
+        Selenium Functions
+        */
+
+        //////////////////////////////////////////
+        public bool TotalWait(IWebDriver FF_driver, string ID = null, string ElemType = "ID", int nTimer = 1000)
+        {
+            bool bResult = LoadingWait(FF_driver, nTimer);
+
+            if (ID != null)
+            {
+                bResult = WaitUntilID(FF_driver, ID, ElemType);
+            }
+
+            return bResult;
+        }
+
+        public bool LoadingWait(IWebDriver FF_driver, int nTimer)
+        {
+            bool bResult = true;
+            string FindID = "progressDialog_modal";
+
+            int nCurTime = 0;
+            IWebElement element = null;
+            while (true)
+            {
+                if (nCurTime > nTimeoutLimit)
+                {
+                    g_Util.DebugPrint("LoadingDialog Check Time Out. " + nCurTime + "ms");
+                    bResult = false;
+                    break;
+                }
+
+                try
+                {
+                    element = FF_driver.FindElement(By.Id(FindID));
+#if (DEBUG)
+                    g_Util.DebugPrint("ProgressDialog Wait (" + nCurTime / 1000 + "sec)");
+#endif
+                    nCurTime += nTimer;
+                    System.Threading.Thread.Sleep(nTimer);
+                    bResult = false;
+                }
+                catch (System.Exception e)
+                {
+                    // No 'progressDialog_modal' Element = Loading is finished.\
+                    g_Util.DebugPrint("No progressDialog_modal! Loading is done.");
+                    bResult = true;
+                    break;
+                }
+            }
+
+            return bResult;
+        }
+
+        private bool WaitUntilID(IWebDriver FF_driver, string ID, string ElemType = "ID")
+        {
+            // Wait until Element becomes clickable.
+            bool bResult = true;
+            int nCurTime = 0;
+            int nTimer = 500;
+            IWebElement element = null;
+            while (true && element == null)
+            {
+                if (ID != "problem_middle" && nCurTime > nTimeoutLimit)
+                {
+                    g_Util.DebugPrint("FindElement Check Time Out. " + nCurTime + "ms");
+                    bResult = false;
+                    break;
+                }
+
+                try
+                {
+                    if (ElemType == "NAME")
+                    {
+                        element = FF_driver.FindElement(By.Name(ID));
+                    }
+                    else if (ElemType == "XPATH_TEXT")
+                    {
+                        string path = "//*[contains(text(), '" + ID + "')]";
+                        //"//*[contains(text(), 'Send to coordinator')]"
+                        element = FF_driver.FindElement(By.XPath(path));
+                    }
+                    else
+                    {
+                        element = FF_driver.FindElement(By.Id(ID));
+                    }
+
+                    g_Util.DebugPrint("[WaitUntilID] Find Success. " + ID);
+                }
+                catch (System.Exception e)
+                {
+                    // No Element. Let's wait more.
+#if (DEBUG)
+                    g_Util.DebugPrint("WaitUntilID, Present (" + ID + ", " + nCurTime / 1000 + " sec)");
+#endif
+                    nCurTime += nTimer;
+                    System.Threading.Thread.Sleep(nTimer);
+                    bResult = false;
+                }
+            }
+            //            nCurTime = 0;
+            //            element = null;
+            //            while (true && element == null)
+            //            {
+            //                if (ID != "problem_middle" && nCurTime > nTimeoutLimit)
+            //                {
+            //                    g_Util.DebugPrint("Clickable Check Time Out. " + nCurTime + "ms");
+            //                    bResult = false;
+            //                    break;
+            //                }
+            //                try
+            //                {
+            //                    element = wait.Until(SeleniumExtras.WaitHelpers.ExpectedConditions.ElementToBeClickable(By.Id(ID)));
+            //                    g_Util.DebugPrint("Element became Clickable, " + ID);
+            //                    bResult = true;
+            //                }
+            //                catch (System.Exception e)
+            //                {
+            //                    // No Element. Let's wait more.
+            //#if (DEBUG)
+            //                    g_Util.DebugPrint("WaitUntilID, Clickable (" + ID + ", " + nCurTime / 1000 + " sec)");
+            //#endif
+            //                    nCurTime += nTimer;
+            //                    System.Threading.Thread.Sleep(nTimer);
+            //                    bResult = false;
+            //                }
+            //            }
+
+            return bResult;
+        }
+
+        public void DoDefaultAction(IWebDriver FF_driver)
+        {
+            g_Util.DebugPrint("[DoDefaultAction]");
+            ClickButton(FF_driver, "problemForm:bewertungAltKopf:bewertungAltKopf");
+        }
+
+        public IWebElement FindElemnt(IWebDriver FF_driver, string ID, string ElemType = "ID", int nTimer = 300)
+        {
+            int nCurTime = 0;
+            IWebElement SelectedElement = null;
+
+            while (true)
+            {
+                if (nCurTime > nTimeoutLimit)
+                {
+                    g_Util.DebugPrint("FindElement Check Time Out. " + nCurTime + "ms");
+                    SelectedElement = null;
+                    break;
+                }
+
+                try
+                {
+                    if (ElemType == "NAME")
+                    {
+                        SelectedElement = FF_driver.FindElement(By.Name(ID));
+                    }
+                    else if (ElemType == "XPATH_TEXT")
+                    {
+                        string path = "//*[contains(text(), '" + ID + "')]";
+                        //"//*[contains(text(), 'Send to coordinator')]"
+                        SelectedElement = FF_driver.FindElement(By.XPath(path)).FindElement(By.XPath("./.."));
+                    }
+                    else
+                    {
+                        SelectedElement = FF_driver.FindElement(By.Id(ID));
+                    }
+                    break;
+                }
+                catch (System.Exception e)
+                {
+                    g_Util.DebugPrint("No Element. Let's wait" + ID);
+                    System.Threading.Thread.Sleep(nTimer);
+                    nCurTime += nTimer;
+                    SelectedElement = null;
+                }
+            }
+            return SelectedElement;
+        }
+
+        public bool ClickElemnt(IWebElement SelectedElement, string ID, string ElemType = "ID", int nTimer = 300)
+        {
+            bool bResult = false;
+
+            int nCurTime = 0;
+            while (true)
+            {
+                if (nCurTime > nTimeoutLimit)
+                {
+                    g_Util.DebugPrint("ClickElemnt Check Time Out. " + nCurTime + "ms");
+                    bResult = false;
+                    break;
+                }
+
+                try
+                {
+                    SelectedElement.Click();
+
+                    g_Util.DebugPrint("Click is Called. (" + ID + ")");
+                    bResult = true;
+                    break;
+                }
+                catch (System.Exception e)
+                {
+                    g_Util.DebugPrint("Element isn't Clickable. Let's wait. " + ID);
+                    System.Threading.Thread.Sleep(nTimer);
+                    nCurTime += nTimer;
+                    bResult = false;
+                }
+            }
+            return bResult;
+        }
+
+        public bool ClickButton(IWebDriver FF_driver, string ID, string ElemType = "ID", bool bSkipable = false)
+        {
+            bool bResult = true;
+#if (DEBUG)
+            g_Util.DebugPrint("[ClickButton]" + ID);
+#endif
+            if (TotalWait(FF_driver, ID, ElemType) == false)
+            {
+                if (bSkipable == true)
+                {
+                    g_Util.DebugPrint("Element Waiting False. Skip this action.  " + ID);
+                    return true;
+                }
+                //else
+                //{
+                //    DoDefaultAction(FF_driver);
+                //}
+            }
+
+            IWebElement SelectedElement = FindElemnt(FF_driver, ID, ElemType);
+            if (SelectedElement == null)
+            {
+                g_Util.DebugPrint("No Element despite Waiting. Skip this action.  " + ID);
+                bResult = true;
+            }
+            else
+            {
+                if (ClickElemnt(SelectedElement, ID) == false)
+                {
+                    g_Util.DebugPrint("Click Fail");
+                    bResult = false;
+                }
+                else
+                {
+                    bResult = true;
+                }
+            }
+
+            return bResult;
+        }
+
+        public bool ClickSendtoCoordinator(IWebDriver FF_driver, string ID, string ElemType = "ID", bool bSkipable = false)
+        {
+            bool bResult = true;
+#if (DEBUG)
+            g_Util.DebugPrint("[ClickSendtoCoordinator]" + ID);
+#endif
+            IWebElement SelectedElement = FindElemnt(FF_driver, ID, ElemType);
+            if (SelectedElement == null)
+            {
+                g_Util.DebugPrint("No Element despite Waiting. Skip this action.  " + ID);
+                bResult = false;
+            }
+            else
+            {
+                try
+                {
+                    SelectedElement = FF_driver.FindElement(By.XPath(".."));
+                    SelectedElement.Click();
+                    bResult = true;
+                }
+                catch (System.Exception e)
+                {
+                    g_Util.DebugPrint("XPath(..) Fail  " + ID);
+                    bResult = false;
+                }
+            }
+            return bResult;
+        }
+
+        public bool ExecuteScript(IWebDriver FF_driver, string ID, int nTimer = 300)
+        {
+            bool bResult = false;
+
+            int nCurTime = 0;
+            while (true)
+            {
+                if (nCurTime > nTimeoutLimit)
+                {
+                    g_Util.DebugPrint("ExecuteScript Time Out. " + nCurTime + "ms");
+                    bResult = false;
+                    break;
+                }
+
+                try
+                {
+                    var jse = (IJavaScriptExecutor)FF_driver;
+                    jse.ExecuteScript(ID, "");
+                    g_Util.DebugPrint("ExecuteScript is Called.   " + ID);
+                    bResult = true;
+                    break;
+                }
+                catch (System.Exception e)
+                {
+                    g_Util.DebugPrint("ExecuteScript isn't possible. Let's wait" + ID);
+                    System.Threading.Thread.Sleep(nTimer);
+                    nCurTime += nTimer;
+                    bResult = false;
+                }
+            }
+            return bResult;
+        }
+
+        public bool ExecuteJS(IWebDriver FF_driver, string ID)
+        {
+            bool bResult = true;
+#if (DEBUG)
+            g_Util.DebugPrint("[ExecuteJS] " + ID);
+#endif
+            if (TotalWait(FF_driver) == false)
+            {
+                g_Util.DebugPrint("Element Waiting False. Skip this action.  " + ID);
+                bResult = true;
+            }
+            else
+            {
+                if (ExecuteScript(FF_driver, ID) == false)
+                {
+                    g_Util.DebugPrint("JS excution fail " + ID);
+                    bResult = false;
+                }
+                else
+                {
+                    bResult = true;
+                }
+            }
+
+            return bResult;
+        }
+
+        public bool SetComboItem(IWebDriver FF_driver, string ID, string InputValue)
+        {
+            bool bResult = true;
+
+#if (DEBUG)
+            g_Util.DebugPrint("[SetComboItem]" + ID + ", " + InputValue);
+#endif
+            if (TotalWait(FF_driver, ID) == false)
+            {
+                g_Util.DebugPrint("Element Waiting False. Skip this action.  " + ID);
+                bResult = true;
+            }
+            else
+            {
+                IWebElement SelectedElement = FindElemnt(FF_driver, ID);
+                if (SelectedElement == null)
+                {
+                    g_Util.DebugPrint("[Error] SetComboItem Element Find Fail ");
+                    bResult = false;
+                }
+                else
+                {
+                    bool bFind = false;
+                    foreach (var Elem in SelectedElement.FindElements(By.TagName("li")))
+                    {
+                        if (Elem.Text == InputValue)
+                        {
+                            Elem.Click();
+                            g_Util.DebugPrint("Select: " + InputValue);
+
+                            bFind = true;
+                            bResult = true;
+                        }
+                    }
+
+                    if (bFind == false)
+                    {
+                        g_Util.DebugPrint("[Warning] No Item in List. Input Value = " + InputValue);
+                        bResult = false;
+                    }
+                    else
+                    {
+                        bResult = true;
+                    }
+                }
+            }
+
+            return bResult;
+        }
+
+        //        public bool SetComboItemBySelect(IWebDriver FF_driver, string ParentID, string InputValue)
+        //        {
+        //            bool bResult = true;
+
+        //#if (DEBUG)
+        //            g_Util.DebugPrint("[SetComboItemBySelect]" + ParentID + ", " + InputValue);
+        //#endif
+        //            if (TotalWait(FF_driver, ParentID) == false)
+        //            {
+        //                g_Util.DebugPrint("Element Waiting False. Skip this action.  " + ParentID);
+        //                return true;
+        //            }
+        //            IWebElement SelectedElement = FF_driver.FindElement(By.Id(ParentID));
+
+        //            try
+        //            {
+        //                var Elements = new SelectElement(SelectedElement);
+        //                Elements.SelectByText(InputValue);
+        //            }
+        //            catch (System.Exception e)
+        //            {
+        //                g_Util.DebugPrint("[Exception] " + e);
+        //                bResult = false;
+        //                return bResult;
+        //            }
+
+        //            return bResult;
+        //        }
+
+        public bool SendKey(IWebElement SelectedElement, string InputText, int nTimer = 300)
+        {
+            bool bResult = false;
+
+            int nCurTime = 0;
+            while (true)
+            {
+                if (nCurTime > nTimeoutLimit)
+                {
+                    g_Util.DebugPrint("ExecuteScript Time Out. " + nCurTime + "ms");
+                    bResult = false;
+                    break;
+                }
+
+                try
+                {
+                    SelectedElement.Clear();
+                    SelectedElement.SendKeys(InputText);
+                    bResult = true;
+                    break;
+                }
+                catch (System.Exception e)
+                {
+                    g_Util.DebugPrint("[Warning] Sendkey Fail" + InputText);
+                    System.Threading.Thread.Sleep(nTimer);
+                    nCurTime += nTimer;
+                    bResult = false;
+                }
+            }
+
+            return bResult;
+        }
+        public bool SetTextBox(IWebDriver FF_driver, string ID, string InputText)
+        {
+            bool bResult = true;
+            if (InputText != null)
+            {
+#if (DEBUG)
+                g_Util.DebugPrint("[SetTextBox]" + ID + ", " + InputText);
+#endif
+                if (TotalWait(FF_driver, ID) == false)
+                {
+                    g_Util.DebugPrint("Element Waiting False. Skip this action.  " + ID);
+                    bResult = true;
+                }
+                else
+                {
+                    IWebElement SelectedElement = FindElemnt(FF_driver, ID);
+                    if (SelectedElement == null)
+                    {
+                        g_Util.DebugPrint("[Error] SetComboItem Element Find Fail " + ID);
+                        bResult = false;
+                    }
+                    else
+                    {
+                        if (SendKey(SelectedElement, InputText) == false)
+                        {
+                            g_Util.DebugPrint("[Error] SendKeyFail. " + ID + "," + InputText);
+                            bResult = false;
+                        }
+                        else
+                        {
+                            bResult = true;
+                        }
+                    }
+                }
+            }
+            return bResult;
+        }
+
+        public bool CallEvent(IWebDriver FF_driver, string ID, string EventType)
+        {
+            bool bResult = true;
+
+#if (DEBUG)
+            g_Util.DebugPrint("[CallEvent]" + ID + ", " + EventType);
+#endif
+
+            if (TotalWait(FF_driver, ID) == false)
+            {
+                g_Util.DebugPrint("Element Waiting False. Skip this action.  " + ID);
+                bResult = true;
+            }
+            else
+            {
+                IWebElement SelectedElement = FindElemnt(FF_driver, ID);
+                if (SelectedElement == null)
+                {
+                    g_Util.DebugPrint("[Error] SetComboItem Element Find Fail.  " + ID);
+                    bResult = false;
+                }
+                else
+                {
+                    IJavaScriptExecutor jsExecutor = (IJavaScriptExecutor)FF_driver;
+                    if (EventType == "onchange")
+                    {
+                        jsExecutor.ExecuteScript("$(arguments[0]).change();", SelectedElement);
+                    }
+                    else if (EventType == "onkeyup")
+                    {
+                        jsExecutor.ExecuteScript("$(arguments[0]).keyup();", SelectedElement);
+                    }
+                    bResult = true;
+                }
+            }
+
+            return bResult;
+        }
+
         public string GetText(IWebDriver FF_driver, string ID)
         {
+            string sText = null;
 #if (DEBUG)
             g_Util.DebugPrint("[GetText]" + ID);
 #endif
-            TotalWait(FF_driver, ID);
-
-            IWebElement SelectedElement = FF_driver.FindElement(By.Id(ID));
-
-            string sText = null;
-            try
+            if (TotalWait(FF_driver, ID) == false)
             {
-                sText = SelectedElement.Text;
+                g_Util.DebugPrint("Element Waiting False. Skip this action.  " + ID);
+                sText = "No Elem";
             }
-            catch (System.Exception e)
+            else
             {
-                g_Util.DebugPrint("[Exception] " + e);
-                sText = "[Exception]";
+                IWebElement SelectedElement = FindElemnt(FF_driver, ID);
+                if (SelectedElement == null)
+                {
+                    g_Util.DebugPrint("[Error] SetComboItem Element Find Fail.  " + ID);
+                    sText = "No Elem";
+                }
+                else
+                {
+
+                    try
+                    {
+                        sText = SelectedElement.Text;
+                    }
+                    catch (System.Exception e)
+                    {
+                        g_Util.DebugPrint("[Error] " + e);
+                        sText = "[No Number]";
+                    }
+                }
             }
             return sText;
         }
